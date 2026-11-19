@@ -30,7 +30,8 @@ jobs:
           java-version: '21'
           cache: maven
 
-      - name: Build e testes
+      # O verify inclui o gate do JaCoCo (MT-1: 80% de linhas; MT-2: 70% de branches)
+      - name: Build, testes e gate de cobertura
         run: ./mvnw -B verify
 
       - name: Relatórios do Surefire e do Failsafe
@@ -41,5 +42,14 @@ jobs:
           path: |
             target/surefire-reports/
             target/failsafe-reports/
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Relatório de cobertura do JaCoCo
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: relatorio-jacoco
+          path: target/site/jacoco/
           if-no-files-found: warn
           retention-days: 7
