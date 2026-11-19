@@ -2,6 +2,7 @@ package br.senac.alocasenac.reserva;
 
 import java.time.Instant;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import jakarta.persistence.ElementCollection;
@@ -63,8 +64,17 @@ public class Reserva {
 
     /** Aplica uma ação de mudança de estado (RN-E1, RN-E2), no instante {@code agora}. */
     public void aplicar(AcaoReserva acao, Instant agora) {
-        // assinatura mínima: regra no feat(green)
+        EstadoReserva destino = TRANSICOES.getOrDefault(estado, Map.of()).get(acao);
+        if (destino != null) {
+            this.estado = destino;
+        }
     }
+
+    /** Transições permitidas: origem → (ação → destino). */
+    private static final Map<EstadoReserva, Map<AcaoReserva, EstadoReserva>> TRANSICOES = Map.of(
+            EstadoReserva.SOLICITADA, Map.of(AcaoReserva.APROVAR, EstadoReserva.APROVADA),
+            EstadoReserva.APROVADA, Map.of(AcaoReserva.INICIAR, EstadoReserva.EM_USO),
+            EstadoReserva.EM_USO, Map.of(AcaoReserva.CONCLUIR, EstadoReserva.CONCLUIDA));
 
     /** Move a reserva para outro intervalo (RF4); a disponibilidade é verificada pelo serviço. */
     public void reagendar(Intervalo novo) {
