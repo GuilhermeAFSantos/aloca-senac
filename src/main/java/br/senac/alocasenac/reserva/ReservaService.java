@@ -84,7 +84,9 @@ public class ReservaService {
     public Reserva aprovar(Long reservaId, String ator) {
         return transacao.execute(status -> {
             Reserva reserva = buscar(reservaId);
+            String anterior = reserva.descricao();
             reserva.aplicar(AcaoReserva.APROVAR, clock.instant());
+            auditoria.registrar(ENTIDADE, reservaId, AcaoReserva.APROVAR.name(), anterior, reserva.descricao(), ator);
             return reservas.save(reserva);
         });
     }
