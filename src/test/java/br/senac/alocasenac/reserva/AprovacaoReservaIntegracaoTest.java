@@ -37,4 +37,23 @@ class AprovacaoReservaIntegracaoTest extends IntegracaoBase {
         // Assert
         assertThat(reserva.getEstado()).isEqualTo(EstadoReserva.APROVADA);
     }
+
+    @Test
+    @DisplayName("B1-09: aprovação automática fica na auditoria com o sistema como ator")
+    void B1_09_aprovacaoAutomaticaFicaNaAuditoriaComOSistemaComoAtor() {
+        // Arrange
+        Long sala = salaS101();
+
+        // Act
+        Reserva reserva = reservaService.criar(MARIANA, Set.of(sala), h("09:00"), h("10:00"));
+
+        // Assert
+        assertThat(auditoria.findAll())
+                .filteredOn(r -> reserva.getId().equals(r.getEntidadeId()) && "sistema".equals(r.getAtor()))
+                .singleElement()
+                .satisfies(r -> {
+                    assertThat(r.getValorAnterior()).contains("SOLICITADA");
+                    assertThat(r.getValorNovo()).contains("APROVADA");
+                });
+    }
 }
