@@ -43,6 +43,21 @@ class AprovacaoReservaIntegracaoTest extends IntegracaoBase {
     }
 
     @Test
+    @DisplayName("B1-07: reserva com um recurso restrito entre outros aguarda aprovação")
+    void B1_07_reservaComUmRecursoRestritoEntreOutrosAguardaAprovacao() {
+        // Arrange
+        Long laboratorio = laboratorioL01();
+        Long projetor = recursos.save(new Recurso("Projetor P-01", TipoRecurso.MATERIAL, null, "Bloco B", false))
+                .getId();
+
+        // Act
+        Reserva reserva = reservaService.criar(MARIANA, Set.of(laboratorio, projetor), h("09:00"), h("10:00"));
+
+        // Assert
+        assertThat(reserva.getEstado()).isEqualTo(EstadoReserva.SOLICITADA);
+    }
+
+    @Test
     @DisplayName("B1-08: reserva só de recursos não restritos é aprovada pelo sistema")
     void B1_08_reservaSoDeRecursosNaoRestritosEAprovadaPeloSistema() {
         // Arrange
