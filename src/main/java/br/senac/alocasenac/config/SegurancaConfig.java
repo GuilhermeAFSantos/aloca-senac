@@ -36,6 +36,7 @@ public class SegurancaConfig {
 
     private static final Logger LOG = LoggerFactory.getLogger(SegurancaConfig.class);
     private static final int TAMANHO_MINIMO_SEGREDO = 32;
+    private static final SecureRandom ALEATORIO = new SecureRandom();
 
     @Bean
     @Order(1)
@@ -74,7 +75,7 @@ public class SegurancaConfig {
         LOG.warn("ALOCASENAC_JWT_SEGREDO ausente ou com menos de {} caracteres: usando chave aleatória; "
                 + "nenhum token externo será aceito nesta execução.", TAMANHO_MINIMO_SEGREDO);
         byte[] aleatoria = new byte[TAMANHO_MINIMO_SEGREDO];
-        new SecureRandom().nextBytes(aleatoria);
+        ALEATORIO.nextBytes(aleatoria);
         return aleatoria;
     }
 
