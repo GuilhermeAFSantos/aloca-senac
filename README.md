@@ -24,3 +24,5 @@ Esse comando sobe a aplicação junto com um PostgreSQL em container. A aplicaç
 - [PRD](docs/prd.md)
 - [Arquitetura](docs/arquitetura.md)
 - [Plano de Teste](docs/plano-de-teste.md)
+- [Requisitos](docs/requisitos.md)
+- [Gestão de Defeitos](docs/defeitos.md) — relate falhas pelo template de issue "Relato de defeito"
