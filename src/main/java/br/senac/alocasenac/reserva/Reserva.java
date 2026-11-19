@@ -69,6 +69,9 @@ public class Reserva {
             throw new TransicaoInvalidaException(
                     "Não é possível " + acao.name().toLowerCase().replace('_', ' ') + " uma reserva " + estado + ".");
         }
+        if (acao == AcaoReserva.INICIAR && agora.isBefore(inicio)) {
+            throw new TransicaoInvalidaException("O uso só pode começar a partir do horário de início da reserva.");
+        }
         this.estado = destino;
     }
 
