@@ -61,6 +61,11 @@ public class Reserva {
                 : "Reservas não são apagadas; para desistir, cancele a reserva.");
     }
 
+    /** Aplica uma ação de mudança de estado (RN-E1, RN-E2), no instante {@code agora}. */
+    public void aplicar(AcaoReserva acao, Instant agora) {
+        // assinatura mínima: regra no feat(green)
+    }
+
     /** Move a reserva para outro intervalo (RF4); a disponibilidade é verificada pelo serviço. */
     public void reagendar(Intervalo novo) {
         this.inicio = novo.inicio();
