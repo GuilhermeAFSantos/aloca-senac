@@ -2,6 +2,7 @@ package br.senac.alocasenac.reserva;
 
 import static br.senac.alocasenac.Horarios.h;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Instant;
 import java.util.Set;
@@ -52,5 +53,32 @@ class ReservaTransicoesTest {
 
         // Assert
         assertThat(reserva.getEstado()).isEqualTo(destino);
+    }
+
+    @ParameterizedTest(name = "B4-03: {0} + {1} é recusada")
+    @CsvSource({
+        "SOLICITADA,     INICIAR",
+        "SOLICITADA,     CONCLUIR",
+        "SOLICITADA,     MARCAR_NAO_COMPARECEU",
+        "APROVADA,       APROVAR",
+        "APROVADA,       REJEITAR",
+        "APROVADA,       CONCLUIR",
+        "EM_USO,         APROVAR",
+        "EM_USO,         INICIAR",
+        "EM_USO,         CANCELAR",
+        "EM_USO,         MARCAR_NAO_COMPARECEU",
+        "CONCLUIDA,      CANCELAR",
+        "CONCLUIDA,      INICIAR",
+        "REJEITADA,      APROVAR",
+        "CANCELADA,      INICIAR",
+        "NAO_COMPARECEU, INICIAR"
+    })
+    void B4_03_transicoesForaDoFluxoSaoRecusadas(EstadoReserva origem, AcaoReserva acao) {
+        // Arrange
+        Reserva reserva = reservaNoEstado(origem);
+
+        // Act + Assert
+        assertThatThrownBy(() -> reserva.aplicar(acao, INICIO)).isInstanceOf(TransicaoInvalidaException.class);
+        assertThat(reserva.getEstado()).isEqualTo(origem);
     }
 }
