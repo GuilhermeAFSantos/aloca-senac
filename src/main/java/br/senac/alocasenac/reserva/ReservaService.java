@@ -81,6 +81,14 @@ public class ReservaService {
         }
     }
 
+    public Reserva aprovar(Long reservaId, String ator) {
+        return transacao.execute(status -> {
+            Reserva reserva = buscar(reservaId);
+            reserva.aplicar(AcaoReserva.APROVAR, clock.instant());
+            return reservas.save(reserva);
+        });
+    }
+
     public void apagar(Long reservaId, String ator) {
         Reserva reserva = buscar(reservaId);
         reserva.verificarPodeSerApagada();
