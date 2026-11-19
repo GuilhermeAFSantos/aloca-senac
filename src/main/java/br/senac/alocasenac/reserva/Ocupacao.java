@@ -59,6 +59,17 @@ public class Ocupacao {
         return new Intervalo(inicio, fim);
     }
 
+    /** Indica se a ocupação foi criada pela reserva informada (nula nunca pertence). */
+    public boolean pertenceAReserva(Long reservaId) {
+        return reservaId != null && origem == OrigemOcupacao.RESERVA && reservaId.equals(referenciaId);
+    }
+
+    /** Move a ocupação para outro intervalo, acompanhando a alteração da reserva (RF4). */
+    public void reagendar(Intervalo novo) {
+        this.inicio = novo.inicio();
+        this.fim = novo.fim();
+    }
+
     public OrigemOcupacao getOrigem() {
         return origem;
     }

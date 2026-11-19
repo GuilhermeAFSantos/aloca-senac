@@ -241,76 +241,77 @@ RF13 (interface responsiva) e RF14 (documentação) são requisitos de qualidade
 
 ## 5. Matriz regra → caso → teste → status
 
-> Preenchida na Aula 05, Prompt 2 (fase red), com `./mvnw -B test` em 2026-11-19: **72 testes, 61 falhas, 0 erros**. Todas as falhas são de **asserção**, sem erro de compilação ou configuração. Os 11 que passam são o `contextLoads` do marco zero e os 10 investigados em §5.1.
-> Status: **vermelho** (falha pelo motivo esperado) · **verde no esqueleto** (investigado, §5.1) · **reservada BDD** · **aguardando Q-xx**.
+> **Fase red** (Aula 05, commit `0ce1526`): `./mvnw -B test` → 72 testes, 61 falhas, 0 erros, todas por **asserção**. A coluna "Falha observada" registra o motivo de cada vermelho.
+> **Fase green** (Aula 06, branch `pratica/tdd-green`): `./mvnw -B verify` → **72 testes, 0 falhas, 0 erros, BUILD SUCCESS**. Nenhum teste apagado, desativado ou com asserção alterada (§6.1).
+> Status: **verde** · **reservada BDD** · **aguardando Q-xx**.
 > Testes em `src/test/java/br/senac/alocasenac/`. Nome do método = ID do caso.
 
 | Regra | Caso | Teste (classe :: método) | Falha observada | Status |
 |---|---|---|---|---|
-| RN-T1 | C01 | `reserva/IntervaloTest :: RN_T1_C01_terminoDepoisDoInicioEAceito` | — | verde no esqueleto |
-| RN-T1 | C02 | `reserva/IntervaloTest :: RN_T1_C02_terminoIgualAoInicioERecusado` | esperava `IntervaloInvalidoException` | vermelho |
+| RN-T1 | C01 | `reserva/IntervaloTest :: RN_T1_C01_terminoDepoisDoInicioEAceito` | — | **verde** (passava no esqueleto, §5.1) |
+| RN-T1 | C02 | `reserva/IntervaloTest :: RN_T1_C02_terminoIgualAoInicioERecusado` | esperava `IntervaloInvalidoException` | **verde** |
 | RN-T1 | C03 | — | — | aguardando Q-03 |
-| RN-T1 | C04 | `reserva/IntervaloTest :: RN_T1_C04_terminoAntesDoInicioERecusado` | esperava exceção | vermelho |
-| RN-T1 | C05 (×3) | `reserva/IntervaloTest :: RN_T1_C05_inicioOuTerminoAusenteERecusado` | esperava exceção | vermelho |
-| RN-T1 | C06 | `reserva/ReservaApiTest :: RN_T1_C06_intervaloInvalidoPelaApiERecusado` | esperava 400, veio 200 | vermelho |
-| RN-T2 | C01 | `reserva/VerificadorDisponibilidadeTest :: RN_T2_C01_mesmoRecursoEmOutroHorarioEAceito` | — | verde no esqueleto |
-| RN-T2 | C02 | `… :: RN_T2_C02_outroRecursoNoMesmoHorarioEAceito` | — | verde no esqueleto |
-| RN-T2 | C03–C07, C10 (×6) | `… :: RN_T2_C03aC07eC10_sobreposicaoNoMesmoRecursoERecusada` | esperava o conflito, veio lista vazia | vermelho |
-| RN-T2 | C08, C09 (×2) | `… :: RN_T2_C08eC09_intervalosQueSeEncostamNaoSeSobrepoem` | — | verde no esqueleto |
-| RN-T2 | C11 | `… :: RN_T2_C11_alteracaoParaHorarioDeOutraReservaERecusada` | esperava o conflito | vermelho |
-| RN-T2 | C12 | `… :: RN_T2_C12_alteracaoDentroDoProprioHorarioEAceita` | — | verde no esqueleto |
-| RN-T2 | C13 | `reserva/ReservaServiceIntegracaoTest :: RN_T2_C13_sobreposicaoGravadaDiretoNoBancoERejeitada` | esperava `DataIntegrityViolationException` | vermelho |
-| RN-T2 | C14 | `reserva/VerificadorDisponibilidadeTest :: RN_T2_C14_reservaPendenteJaOcupaOHorario` | esperava o conflito | vermelho |
-| RN-T2 | C15 | `… :: RN_T2_C15_ocupacaoInativaNaoBloqueia` | — | verde no esqueleto |
-| RF5 | C01 | `… :: RF5_C01_professorJaAlocadoEmOutraSalaEConflito` | esperava o conflito do professor | vermelho |
-| RF5 | C02 | `… :: RF5_C02_salaEProfessorLivresSaoAceitos` | — | verde no esqueleto |
-| RF5 | C03 | `… :: RF5_C03_materialOcupadoEConflito` | esperava o conflito do material | vermelho |
-| RF5 | C04 | `reserva/ReservaServiceIntegracaoTest :: RF5_C04_reservaComUmRecursoEmConflitoERecusadaPorInteiro` | esperava `ConflitoDeHorarioException` | vermelho |
-| RN-T3 / RF6 | C01 | `… :: RN_T3_C01_duasSimultaneasGeramUmaUnicaReserva` | esperava 1 aceita, foram 2 | vermelho |
-| RN-T3 / RF6 | C02 | `… :: RN_T3_C02_vinteSimultaneasGeramUmaUnicaReserva` | esperava 1 aceita, foram 20 | vermelho |
-| RN-T3 / RF6 | C03 | `… :: RN_T3_C03_simultaneasParcialmenteSobrepostasGeramUmaReserva` | esperava 1 aceita, foram 2 | vermelho |
-| RN-T3 / RF6 | C04 | `… :: RN_T3_C04_simultaneasDeRecursosDiferentesSaoAceitas` | esperava 2 gravadas, 0 | vermelho |
-| RN-T3 / RF6 | C05 | `… :: RN_T3_C05_perdedoraDaDisputaERegistradaComoTentativaRecusada` | esperava 1 recusa registrada, 0 | vermelho |
+| RN-T1 | C04 | `reserva/IntervaloTest :: RN_T1_C04_terminoAntesDoInicioERecusado` | esperava exceção | **verde** |
+| RN-T1 | C05 (×3) | `reserva/IntervaloTest :: RN_T1_C05_inicioOuTerminoAusenteERecusado` | esperava exceção | **verde** |
+| RN-T1 | C06 | `reserva/ReservaApiTest :: RN_T1_C06_intervaloInvalidoPelaApiERecusado` | esperava 400, veio 200 | **verde** |
+| RN-T2 | C01 | `reserva/VerificadorDisponibilidadeTest :: RN_T2_C01_mesmoRecursoEmOutroHorarioEAceito` | — | **verde** (passava no esqueleto, §5.1) |
+| RN-T2 | C02 | `… :: RN_T2_C02_outroRecursoNoMesmoHorarioEAceito` | — | **verde** (passava no esqueleto, §5.1) |
+| RN-T2 | C03–C07, C10 (×6) | `… :: RN_T2_C03aC07eC10_sobreposicaoNoMesmoRecursoERecusada` | esperava o conflito, veio lista vazia | **verde** |
+| RN-T2 | C08, C09 (×2) | `… :: RN_T2_C08eC09_intervalosQueSeEncostamNaoSeSobrepoem` | — | **verde** (passava no esqueleto, §5.1) |
+| RN-T2 | C11 | `… :: RN_T2_C11_alteracaoParaHorarioDeOutraReservaERecusada` | esperava o conflito | **verde** |
+| RN-T2 | C12 | `… :: RN_T2_C12_alteracaoDentroDoProprioHorarioEAceita` | — | **verde** (passava no esqueleto, §5.1) |
+| RN-T2 | C13 | `reserva/ReservaServiceIntegracaoTest :: RN_T2_C13_sobreposicaoGravadaDiretoNoBancoERejeitada` | esperava `DataIntegrityViolationException` | **verde** |
+| RN-T2 | C14 | `reserva/VerificadorDisponibilidadeTest :: RN_T2_C14_reservaPendenteJaOcupaOHorario` | esperava o conflito | **verde** |
+| RN-T2 | C15 | `… :: RN_T2_C15_ocupacaoInativaNaoBloqueia` | — | **verde** (passava no esqueleto, §5.1) |
+| RF5 | C01 | `… :: RF5_C01_professorJaAlocadoEmOutraSalaEConflito` | esperava o conflito do professor | **verde** |
+| RF5 | C02 | `… :: RF5_C02_salaEProfessorLivresSaoAceitos` | — | **verde** (passava no esqueleto, §5.1) |
+| RF5 | C03 | `… :: RF5_C03_materialOcupadoEConflito` | esperava o conflito do material | **verde** |
+| RF5 | C04 | `reserva/ReservaServiceIntegracaoTest :: RF5_C04_reservaComUmRecursoEmConflitoERecusadaPorInteiro` | esperava `ConflitoDeHorarioException` | **verde** |
+| RN-T3 / RF6 | C01 | `… :: RN_T3_C01_duasSimultaneasGeramUmaUnicaReserva` | esperava 1 aceita, foram 2 | **verde** |
+| RN-T3 / RF6 | C02 | `… :: RN_T3_C02_vinteSimultaneasGeramUmaUnicaReserva` | esperava 1 aceita, foram 20 | **verde** |
+| RN-T3 / RF6 | C03 | `… :: RN_T3_C03_simultaneasParcialmenteSobrepostasGeramUmaReserva` | esperava 1 aceita, foram 2 | **verde** |
+| RN-T3 / RF6 | C04 | `… :: RN_T3_C04_simultaneasDeRecursosDiferentesSaoAceitas` | esperava 2 gravadas, 0 | **verde** |
+| RN-T3 / RF6 | C05 | `… :: RN_T3_C05_perdedoraDaDisputaERegistradaComoTentativaRecusada` | esperava 1 recusa registrada, 0 | **verde** |
 | RN-T4 / RF8 | C01–C07 | — | — | **reservada BDD (B3)** |
-| RN-E1 | C01 | `reserva/ReservaTest :: RN_E1_C01_novaReservaNasceSolicitada` | esperava SOLICITADA, veio null | vermelho |
+| RN-E1 | C01 | `reserva/ReservaTest :: RN_E1_C01_novaReservaNasceSolicitada` | esperava SOLICITADA, veio null | **verde** |
 | RN-E1 / RN-E2 | demais | — | — | **reservada BDD (B4)** |
 | RN-E3 / RF7 | C01–C06 | — | — | **reservada BDD (B1, B2)** |
-| RN-E4 | C01, C02 (×2) | `reserva/ReservaTest :: RN_E4_C01eC02_reservaIniciadaNaoPodeSerApagada` | esperava `OperacaoProibidaException` | vermelho |
-| RN-E4 | C03 (×2) | `reserva/ReservaTest :: RN_E4_C03_reservaNaoIniciadaTambemNaoEApagada` | esperava exceção | vermelho |
-| RN-E4 | C04 | `reserva/ReservaApiTest :: RN_E4_C04_apagarReservaIniciadaPelaApiERecusado` | esperava 409, veio 200 | vermelho |
-| RN-E5 | C01 | `reserva/ReservaServiceIntegracaoTest :: RN_E5_C01_criarReservaGeraAuditoria` | esperava a reserva criada, veio null | vermelho |
-| RN-E5 | C02 | `… :: RN_E5_C02_alterarReservaGeraAuditoriaComAntesEDepois` | esperava 1 registro, 0 | vermelho |
-| RN-E5 | C03 | `recurso/RecursoIntegracaoTest :: RN_E5_C03_cadastroDeRecursoGeraAuditoria` | esperava o recurso cadastrado | vermelho |
-| RN-E5 | C04 | `reserva/ReservaAuditoriaFalhaTest :: RN_E5_C04_falhaNaAuditoriaDesfazAReserva` | esperava a falha propagada | vermelho |
-| RN-E5 | C05 | `auditoria/RegistroAuditoriaTest :: RN_E5_C05_registroUsaOInstanteDoRelogioInjetado` | esperava 08:15, veio null | vermelho |
+| RN-E4 | C01, C02 (×2) | `reserva/ReservaTest :: RN_E4_C01eC02_reservaIniciadaNaoPodeSerApagada` | esperava `OperacaoProibidaException` | **verde** |
+| RN-E4 | C03 (×2) | `reserva/ReservaTest :: RN_E4_C03_reservaNaoIniciadaTambemNaoEApagada` | esperava exceção | **verde** |
+| RN-E4 | C04 | `reserva/ReservaApiTest :: RN_E4_C04_apagarReservaIniciadaPelaApiERecusado` | esperava 409, veio 200 | **verde** |
+| RN-E5 | C01 | `reserva/ReservaServiceIntegracaoTest :: RN_E5_C01_criarReservaGeraAuditoria` | esperava a reserva criada, veio null | **verde** |
+| RN-E5 | C02 | `… :: RN_E5_C02_alterarReservaGeraAuditoriaComAntesEDepois` | esperava 1 registro, 0 | **verde** |
+| RN-E5 | C03 | `recurso/RecursoIntegracaoTest :: RN_E5_C03_cadastroDeRecursoGeraAuditoria` | esperava o recurso cadastrado | **verde** |
+| RN-E5 | C04 | `reserva/ReservaAuditoriaFalhaTest :: RN_E5_C04_falhaNaAuditoriaDesfazAReserva` | esperava a falha propagada | **verde** |
+| RN-E5 | C05 | `auditoria/RegistroAuditoriaTest :: RN_E5_C05_registroUsaOInstanteDoRelogioInjetado` | esperava 08:15, veio null | **verde** |
 | RN-E5 | C06 | — | — | **reservada BDD (B4)** |
-| RF10 | C01 | `auditoria/HistoricoAuditoriaTest :: RF10_C01_historicoEmOrdemCronologicaSoDaEntidade` | esperava 2 registros em ordem, veio vazio | vermelho |
-| RF9 | C01 | `emprestimo/EmprestimoTest :: RF9_C01_retiradaRegistraInstanteEResponsavel` | esperava 09:00, veio null | vermelho |
-| RF9 | C02 | `… :: RF9_C02_devolucaoRegistraInstanteEResponsavel` | esperava 11:00, veio null | vermelho |
-| RF9 | C03 | `… :: RF9_C03_devolverSemRetiradaERecusado` | esperava `EmprestimoInvalidoException` | vermelho |
-| RF9 | C04 | `… :: RF9_C04_retirarDuasVezesERecusado` | esperava exceção | vermelho |
+| RF10 | C01 | `auditoria/HistoricoAuditoriaTest :: RF10_C01_historicoEmOrdemCronologicaSoDaEntidade` | esperava 2 registros em ordem, veio vazio | **verde** |
+| RF9 | C01 | `emprestimo/EmprestimoTest :: RF9_C01_retiradaRegistraInstanteEResponsavel` | esperava 09:00, veio null | **verde** |
+| RF9 | C02 | `… :: RF9_C02_devolucaoRegistraInstanteEResponsavel` | esperava 11:00, veio null | **verde** |
+| RF9 | C03 | `… :: RF9_C03_devolverSemRetiradaERecusado` | esperava `EmprestimoInvalidoException` | **verde** |
+| RF9 | C04 | `… :: RF9_C04_retirarDuasVezesERecusado` | esperava exceção | **verde** |
 | RF9 | C05–C07 | — | — | aguardando Q-10, Q-11, Q-12 |
-| RF12 | C01 | `relatorio/RelatorioServiceTest :: RF12_C01_utilizacaoSomaAsReservasDoRecurso` | esperava 2 h, mapa vazio | vermelho |
-| RF12 | C02 | `… :: RF12_C02_cargaHorariaDoProfessor` | esperava 3 h, mapa vazio | vermelho |
-| RF12 | C03 | `… :: RF12_C03_conflitosEvitadosContaAsRecusas` | esperava 2, veio 0 | vermelho |
-| RF12 | C04 | `… :: RF12_C04_periodoSemReservasZerado` | — | verde no esqueleto |
+| RF12 | C01 | `relatorio/RelatorioServiceTest :: RF12_C01_utilizacaoSomaAsReservasDoRecurso` | esperava 2 h, mapa vazio | **verde** |
+| RF12 | C02 | `… :: RF12_C02_cargaHorariaDoProfessor` | esperava 3 h, mapa vazio | **verde** |
+| RF12 | C03 | `… :: RF12_C03_conflitosEvitadosContaAsRecusas` | esperava 2, veio 0 | **verde** |
+| RF12 | C04 | `… :: RF12_C04_periodoSemReservasZerado` | — | **verde** (passava no esqueleto, §5.1) |
 | RF12 | C05, C06 | — | — | aguardando Q-13, Q-14 |
-| RF1 | C01 | `reserva/ReservaApiTest :: RF1_C01_anonimoNaoCriaReserva` | — | verde no esqueleto (§5.1) |
-| RF1 | C02 | `… :: RF1_C02_solicitanteCriaReserva` | esperava 201, veio 200 | vermelho |
-| RF1 | C03 | `recurso/RecursoApiTest :: RF1_C03_solicitanteNaoCadastraSala` | esperava 403, veio 200 | vermelho |
-| RF1 | C04 | `recurso/RecursoApiTest :: RF1_C04_administradorCadastraSala` | esperava 201, veio 200 | vermelho |
-| RF1 | C05 | `reserva/ReservaApiTest :: RF1_C05_solicitanteNaoAlteraReservaDeOutro` | esperava 403, veio 200 | vermelho |
-| RF1 | C06 | `… :: RF1_C06_responsavelAlteraReservaDeSolicitante` | esperava início 11:00, continuou 09:00 | vermelho |
-| RF2 | C01 (×3) | `recurso/RecursoIntegracaoTest :: RF2_C01_recursoCadastradoPodeSerConsultado` | esperava recurso, veio null | vermelho |
-| RF2 | C02 (×4) | `recurso/RecursoTest :: RF2_C02_cadastroSemNomeOuSemTipoERecusado` | esperava `DadosInvalidosException` | vermelho |
-| RF3 | C01 | `recurso/RecursoIntegracaoTest :: RF3_C01_pesquisaPorTipoRetornaSoOTipo` | esperava 1 sala, lista vazia | vermelho |
-| RF3 | C02 | `… :: RF3_C02_pesquisaPorCapacidadeMinimaRespeitaOLimite` | esperava 30 e 31, lista vazia | vermelho |
-| RF3 | C03 | `… :: RF3_C03_pesquisaPorLocalizacao` | esperava 1, lista vazia | vermelho |
-| RF3 | C04 | `… :: RF3_C04_pesquisaPorDisponibilidadeExcluiOcupados` | esperava a sala livre, lista vazia | vermelho |
+| RF1 | C01 | `reserva/ReservaApiTest :: RF1_C01_anonimoNaoCriaReserva` | — | **verde** (passava no esqueleto, §5.1) |
+| RF1 | C02 | `… :: RF1_C02_solicitanteCriaReserva` | esperava 201, veio 200 | **verde** |
+| RF1 | C03 | `recurso/RecursoApiTest :: RF1_C03_solicitanteNaoCadastraSala` | esperava 403, veio 200 | **verde** |
+| RF1 | C04 | `recurso/RecursoApiTest :: RF1_C04_administradorCadastraSala` | esperava 201, veio 200 | **verde** |
+| RF1 | C05 | `reserva/ReservaApiTest :: RF1_C05_solicitanteNaoAlteraReservaDeOutro` | esperava 403, veio 200 | **verde** |
+| RF1 | C06 | `… :: RF1_C06_responsavelAlteraReservaDeSolicitante` | esperava início 11:00, continuou 09:00 | **verde** |
+| RF2 | C01 (×3) | `recurso/RecursoIntegracaoTest :: RF2_C01_recursoCadastradoPodeSerConsultado` | esperava recurso, veio null | **verde** |
+| RF2 | C02 (×4) | `recurso/RecursoTest :: RF2_C02_cadastroSemNomeOuSemTipoERecusado` | esperava `DadosInvalidosException` | **verde** |
+| RF3 | C01 | `recurso/RecursoIntegracaoTest :: RF3_C01_pesquisaPorTipoRetornaSoOTipo` | esperava 1 sala, lista vazia | **verde** |
+| RF3 | C02 | `… :: RF3_C02_pesquisaPorCapacidadeMinimaRespeitaOLimite` | esperava 30 e 31, lista vazia | **verde** |
+| RF3 | C03 | `… :: RF3_C03_pesquisaPorLocalizacao` | esperava 1, lista vazia | **verde** |
+| RF3 | C04 | `… :: RF3_C04_pesquisaPorDisponibilidadeExcluiOcupados` | esperava a sala livre, lista vazia | **verde** |
 | RF3 | C05 | — | — | aguardando Q-16 |
-| RF11 | C01 | `notificacao/NotificacaoIntegracaoTest :: RF11_C01_criarReservaRegistraNotificacaoPendente` | esperava 1 na outbox, 0 | vermelho |
-| RF11 | C02 | `… :: RF11_C02_servicoForaDoArNaoDesfazAReserva` | esperava reserva mantida, 0 | vermelho |
-| RF11 | C03 | `… :: RF11_C03_notificacaoPendenteEEnviadaUmaVez` | esperava 1 envio, 0 | vermelho |
+| RF11 | C01 | `notificacao/NotificacaoIntegracaoTest :: RF11_C01_criarReservaRegistraNotificacaoPendente` | esperava 1 na outbox, 0 | **verde** |
+| RF11 | C02 | `… :: RF11_C02_servicoForaDoArNaoDesfazAReserva` | esperava reserva mantida, 0 | **verde** |
+| RF11 | C03 | `… :: RF11_C03_notificacaoPendenteEEnviadaUmaVez` | esperava 1 envio, 0 | **verde** |
 
 ### 5.1 Testes que já passam no esqueleto (investigados)
 
@@ -325,4 +326,38 @@ O Prompt 2 diz que um teste que já passa indica caso mal escrito ou regra já i
 ### 5.2 Regras sem teste
 - **Reservadas para o BDD:** RN-T4/RF8 (B3), RN-E1/RN-E2 exceto o estado inicial (B4), RN-E3/RF7 (B1, B2), RN-E5-C06 (B4).
 - **Aguardando resposta:** RN-T1-C03 (Q-03), RF9-C05–C07 (Q-10–Q-12), RF12-C05–C06 (Q-13, Q-14), RF3-C05 (Q-16).
-- **Todas as outras regras do inventário têm ao menos um teste vermelho.**
+- **Todas as outras regras do inventário têm ao menos um teste, e todos estão verdes desde a Aula 06.**
+
+## 6. Fase green (Aula 06, Prompt 1)
+
+### 6.1 Integridade dos testes
+| Verificação | Resultado |
+|---|---|
+| Testes apagados, `@Disabled` ou com asserção alterada | **Nenhum.** O `git diff 0ce1526 -- src/test` só mostra a `IntegracaoBase`: a propriedade `ddl-auto=create-drop` sai, porque o esquema passa a vir do Flyway, já previsto no comentário da classe, e entra `alocasenac.notificacao.agendamento=false` |
+| Testes de concorrência estáveis | `ReservaServiceIntegracaoTest` rodado 3 vezes seguidas, todas verdes |
+
+### 6.2 Como cada regra ficou verde
+| Regra | Implementação | Componente (`docs/arquitetura.md` §14) | ADR |
+|---|---|---|---|
+| RN-T1 | `Intervalo.de` recusa ausência e término ≤ início | — (valor de domínio) | — |
+| RN-T2 / RF5 | `Intervalo.sobrepoe` semiaberto (D-01); filtro por recurso, ocupação ativa (D-02) e exclusão da própria reserva | Verificador de Disponibilidade | ADR-003 |
+| RN-T2-C13, RN-T3 / RF6 | Restrição `EXCLUDE USING gist` em `ocupacao` (migração `V1__esquema_inicial.sql`); a recusa do banco vira `ConflitoDeHorarioException` | Banco Operacional + Serviço de Reservas | ADR-000, ADR-003 |
+| RN-T3-C05, RF12 | Recusa gravada **depois** da transação desfeita, em transação própria | Registro de Tentativas Recusadas | ADR-004 |
+| RN-E1-C01 | `Reserva.nova` nasce SOLICITADA | Serviço de Reservas | — |
+| RN-E4 / D-04 | `verificarPodeSerApagada` sempre recusa; a API responde 409 | Serviço de Reservas | — |
+| RN-E5 / RF10 | Auditoria na mesma transação; instante pelo `Clock`; histórico ordenado | Serviço de Auditoria | ADR-004 |
+| RF9 | Retirada e devolução com `Clock`; recusa devolução sem retirada e retirada repetida | — (Serviço de Empréstimos, ainda sem API) | — |
+| RF11 | Outbox gravada na transação da reserva; Despachante com cliente HTTP e reenvio | Despachante de Notificações | ADR-005 |
+| RF12 | Soma de utilização, carga horária do professor e contagem de recusas | Serviço de Relatórios | — |
+| RF1 / D-03 | JWT (claim `perfis`), regra na rota e `@PreAuthorize` no controller; Solicitante altera só as próprias | Filtro de Segurança | ADR-014 (rev.), ADR-015 |
+| RF2 / RF3 | Validação de nome e tipo; pesquisa por tipo, capacidade, localização e disponibilidade | Serviço de Catálogo | ADR-001 |
+
+### 6.3 Divergências e decisões registradas nesta fase
+| ID | Divergência ou decisão | Tratamento | Estado |
+|---|---|---|---|
+| G-01 | **ADR-015 previa autorização nos métodos de serviço**, mas os testes de integração chamam os serviços diretamente, sem usuário autenticado (ex.: `RF2_C01`) | A autorização foi aplicada **na rota e nos métodos dos controllers** (`@PreAuthorize`). Pôr nos serviços exigiria mudar os testes, o que não é permitido sem perguntar. ADR-015 anotada | **Decidido pelo grupo (2026-11-19): manter nos controllers** |
+| G-02 | B3 (manutenção) é do ciclo BDD | O Verificador e a restrição de exclusão consideram **só ocupações de origem RESERVA**. Ocupações de BLOQUEIO entram no BDD | Intencional (prioridade do BDD) |
+| G-03 | RF12: Q-13 (reserva que cruza o período) e Q-14 (canceladas e rejeitadas) seguem sem resposta | Comportamento **provisório**, sem teste: conta só a parte dentro do período e ignora ocupações inativas | Aguardando Q-13, Q-14 |
+| G-04 | RF3: a pesquisa por disponibilidade considera **todas** as ocupações ativas, inclusive bloqueios futuros | Um recurso bloqueado não aparece como disponível, mas isso não impede a reserva, que é B3 | Registrado |
+| G-05 | Autenticação da API decidida pelo usuário: **JWT HS256**, segredo em `ALOCASENAC_JWT_SEGREDO` (nunca versionado). Sem segredo, a aplicação sobe com chave aleatória e não aceita token externo | ADR-014 revisada | Decidido |
+| G-06 | Propagação `MANDATORY` na auditoria impedia a injeção de falha do teste RN-E5-C04 | Voltou para `REQUIRED`; os serviços sempre chamam dentro da própria transação (I-5 mantida) | Corrigido na produção, teste intacto |

@@ -41,7 +41,19 @@ public class Recurso {
     /** Cria um recurso validando os dados obrigatórios (RF2). */
     public static Recurso novo(String nome, TipoRecurso tipo, Integer capacidade, String localizacao,
             boolean restrito) {
-        return new Recurso(nome, tipo, capacidade, localizacao, restrito);
+        if (nome == null || nome.isBlank()) {
+            throw new DadosInvalidosException("Informe o nome do recurso.");
+        }
+        if (tipo == null) {
+            throw new DadosInvalidosException("Informe o tipo do recurso: sala, professor ou material.");
+        }
+        return new Recurso(nome.strip(), tipo, capacidade, localizacao, restrito);
+    }
+
+    /** Resumo usado na auditoria (RF10). */
+    public String descricao() {
+        return "tipo=" + tipo + "; nome=" + nome + "; capacidade=" + capacidade + "; localizacao=" + localizacao
+                + "; restrito=" + restrito;
     }
 
     public Long getId() {

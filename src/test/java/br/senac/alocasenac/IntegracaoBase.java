@@ -15,9 +15,10 @@ import br.senac.alocasenac.reserva.TentativaRecusadaRepository;
 
 /**
  * Base dos testes de integração: PostgreSQL real em container (RQ-2, RQ-7) e MockMvc.
- * Até a Aula 06 introduzir as migrações, o esquema é gerado pelo Hibernate nos testes.
+ * O esquema vem das migrações do Flyway (Aula 06), o mesmo da aplicação.
+ * O agendador da outbox fica desligado para os testes controlarem quando a notificação é despachada.
  */
-@SpringBootTest(properties = "spring.jpa.hibernate.ddl-auto=create-drop")
+@SpringBootTest(properties = "alocasenac.notificacao.agendamento=false")
 @AutoConfigureMockMvc
 @Import(TestcontainersConfiguration.class)
 public abstract class IntegracaoBase {

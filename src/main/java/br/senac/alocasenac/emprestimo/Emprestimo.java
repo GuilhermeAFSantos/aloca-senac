@@ -37,11 +37,22 @@ public class Emprestimo {
     }
 
     public void retirar(String ator, Clock clock) {
-        // assinatura mínima: regra implementada na Aula 06
+        if (retiradaEm != null) {
+            throw new EmprestimoInvalidoException("Este item já foi retirado.");
+        }
+        this.retiradaEm = clock.instant();
+        this.retiradoPor = ator;
     }
 
     public void devolver(String ator, Clock clock) {
-        // assinatura mínima: regra implementada na Aula 06
+        if (retiradaEm == null) {
+            throw new EmprestimoInvalidoException("Não é possível devolver um item que não foi retirado.");
+        }
+        if (devolvidoEm != null) {
+            throw new EmprestimoInvalidoException("Este item já foi devolvido.");
+        }
+        this.devolvidoEm = clock.instant();
+        this.devolvidoPor = ator;
     }
 
     public Long getId() {

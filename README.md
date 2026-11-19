@@ -15,6 +15,13 @@ Não é preciso instalar Maven: o projeto usa o wrapper (`mvnw`).
 ```
 Esse comando sobe a aplicação junto com um PostgreSQL em container. A aplicação fica em http://localhost:8080.
 
+### API e autenticação
+A API REST fica em `/api/**` e exige um token **JWT HS256** no cabeçalho `Authorization: Bearer <token>`:
+- claim `sub`: identificador do usuário (use contas sintéticas, ex.: `mariana.teste@example.invalid`);
+- claim `perfis`: lista com `SOLICITANTE`, `RESPONSAVEL` ou `ADMINISTRADOR`.
+
+O segredo de assinatura vem da variável de ambiente `ALOCASENAC_JWT_SEGREDO`, com no mínimo 32 caracteres e **nunca versionado** (veja `.env.example`). Sem ela, a aplicação sobe com uma chave aleatória e não aceita token externo.
+
 ## Como rodar os testes
 ```bash
 ./mvnw test

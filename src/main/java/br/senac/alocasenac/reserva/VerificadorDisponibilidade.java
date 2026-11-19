@@ -6,7 +6,12 @@ import java.util.Set;
 
 import org.springframework.stereotype.Component;
 
-/** Checagem prévia de sobreposição por recurso, inclusive agenda do professor (RF5, RN-T2; ADR-003). */
+/**
+ * Checagem prévia de sobreposição por recurso, inclusive agenda do professor (RF5, RN-T2; ADR-003, DP-04).
+ * A garantia final contra dupla reserva é a restrição de exclusão do banco (I-4).
+ *
+ * <p>Considera só ocupações de origem RESERVA: o bloqueio por manutenção (RF8, RN-T4) pertence ao ciclo BDD (B3).
+ */
 @Component
 public class VerificadorDisponibilidade {
 
@@ -17,6 +22,12 @@ public class VerificadorDisponibilidade {
      */
     public List<Ocupacao> conflitos(Set<Long> recursoIds, Intervalo pedido, Long reservaIgnorada,
             Collection<Ocupacao> existentes) {
-        return List.of();
+        return existentes.stream()
+                .filter(Ocupacao::isAtiva)
+                .filter(ocupacao -> ocupacao.getOrigem() == OrigemOcupacao.RESERVA)
+                .filter(ocupacao -> recursoIds.contains(ocupacao.getRecursoId()))
+                .filter(ocupacao -> !ocupacao.pertenceAReserva(reservaIgnorada))
+                .filter(ocupacao -> ocupacao.intervalo().sobrepoe(pedido))
+                .toList();
     }
 }

@@ -1,5 +1,6 @@
 package br.senac.alocasenac.notificacao;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -19,6 +20,7 @@ public class NotificacaoOutbox {
 
     private String destinatario;
 
+    @Column(length = 1000)
     private String payload;
 
     @Enumerated(EnumType.STRING)
@@ -35,6 +37,15 @@ public class NotificacaoOutbox {
         this.destinatario = destinatario;
         this.payload = payload;
         this.estado = estado;
+    }
+
+    public void marcarEnviada() {
+        this.estado = EstadoNotificacao.ENVIADA;
+        this.tentativas++;
+    }
+
+    public void registrarFalha() {
+        this.tentativas++;
     }
 
     public Long getId() {

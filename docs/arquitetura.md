@@ -1151,7 +1151,7 @@ Tecnologia: Actuator e Micrometer do Spring Boot são a opção natural do DA-01
 - **Condição de revisão:** resposta a P-01.
 
 ### ADR-014 — Interface Thymeleaf e documentação de API
-- **Status:** adiada (Thymeleaf aceito; API REST adiada)
+- **Status:** ~~adiada (Thymeleaf aceito; API REST adiada)~~ → **revisada na Aula 06 (2026-11-19):** API REST em `/api/**` aceita, autenticada por **JWT HS256** (decisão do usuário). Perfil na claim `perfis`, usuário na claim `sub`, segredo na variável `ALOCASENAC_JWT_SEGREDO` (nunca versionado), sem sessão e sem CSRF. Alternativas descartadas: HTTP Basic (sem token, menos fiel aos "tokens de cada perfil" do BDD) e sessão com formulário (inadequada para API). A documentação da API (RF14) continua pendente.
 - **Contexto e forças:** RF13 (responsiva), RF14 (API **ou** fluxos públicos), DA-03.
 - **Requisitos/cenários:** RF13, RF14; USA-01.
 - **Alternativas:** (a) só Thymeleaf + documentação dos fluxos; (b) Thymeleaf + API REST documentada.
@@ -1162,7 +1162,7 @@ Tecnologia: Actuator e Micrometer do Spring Boot são a opção natural do DA-01
 - **Condição de revisão:** resposta a P-11; critério de aceite de responsividade (DV-03).
 
 ### ADR-015 — Autorização por perfil em rota e em método
-- **Status:** aceita
+- **Status:** aceita. *Divergência na implementação (Aula 06, G-01 em `docs/testes/plano-tdd.md` §6.3):* a regra de método foi aplicada nos **métodos dos controllers**, não nos serviços, porque os testes de integração chamam os serviços sem usuário autenticado. **Decisão do grupo (2026-11-19): manter nos controllers.** Consequência: um serviço chamado por outro caminho que não a API não tem checagem de perfil, e toda nova entrada (ex.: telas Thymeleaf) precisa da própria regra.
 - **Contexto e forças:** falha de autorização limita a nota; só Responsáveis aprovam restritos.
 - **Requisitos/cenários:** RF1, RF7, RN-E3, RQ-6, LIM-3, MT-4; SEG-01.
 - **Alternativas:** (a) só nas rotas (Filtro de Segurança); (b) rotas + métodos de serviço sensíveis; (c) só esconder opções na interface.

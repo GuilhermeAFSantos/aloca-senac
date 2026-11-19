@@ -3,6 +3,7 @@ package br.senac.alocasenac.auditoria;
 import java.time.Clock;
 import java.time.Instant;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -22,8 +23,10 @@ public class RegistroAuditoria {
 
     private String acao;
 
+    @Column(length = 1000)
     private String valorAnterior;
 
+    @Column(length = 1000)
     private String valorNovo;
 
     private String ator;
@@ -48,7 +51,7 @@ public class RegistroAuditoria {
     /** Cria o registro com o instante dado pelo relógio injetado. */
     public static RegistroAuditoria de(String entidade, Long entidadeId, String acao, String valorAnterior,
             String valorNovo, String ator, Clock clock) {
-        return new RegistroAuditoria();
+        return new RegistroAuditoria(entidade, entidadeId, acao, valorAnterior, valorNovo, ator, clock.instant());
     }
 
     public Long getId() {

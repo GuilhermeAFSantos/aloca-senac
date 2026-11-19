@@ -47,12 +47,29 @@ public class Reserva {
 
     /** Nova reserva pedida por um solicitante (RN-E1: estado inicial). */
     public static Reserva nova(String solicitante, Set<Long> recursoIds, Intervalo intervalo) {
-        return new Reserva();
+        return new Reserva(solicitante, recursoIds, intervalo.inicio(), intervalo.fim(), EstadoReserva.SOLICITADA);
     }
 
-    /** RN-E4 e decisão D-04: verifica se a reserva pode ser apagada. */
+    /**
+     * RN-E4 e decisão D-04: nenhuma reserva é apagada. Reservas iniciadas preservam o histórico (RN-E4);
+     * as não iniciadas devem ser canceladas, não apagadas (D-04).
+     */
     public void verificarPodeSerApagada() {
-        // assinatura mínima: regra implementada na Aula 06
+        boolean iniciada = estado == EstadoReserva.EM_USO || estado == EstadoReserva.CONCLUIDA;
+        throw new OperacaoProibidaException(iniciada
+                ? "Reservas iniciadas não podem ser apagadas."
+                : "Reservas não são apagadas; para desistir, cancele a reserva.");
+    }
+
+    /** Move a reserva para outro intervalo (RF4); a disponibilidade é verificada pelo serviço. */
+    public void reagendar(Intervalo novo) {
+        this.inicio = novo.inicio();
+        this.fim = novo.fim();
+    }
+
+    /** Resumo usado na auditoria (RN-E5). */
+    public String descricao() {
+        return "estado=" + estado + "; " + intervalo();
     }
 
     public Long getId() {
