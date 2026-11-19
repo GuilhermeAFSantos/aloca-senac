@@ -69,14 +69,16 @@ public class Reserva {
             throw new TransicaoInvalidaException(
                     "Não é possível " + acao.name().toLowerCase().replace('_', ' ') + " uma reserva " + estado + ".");
         }
-        if (acao == AcaoReserva.INICIAR && agora.isBefore(inicio)) {
-            throw new TransicaoInvalidaException("O uso só pode começar a partir do horário de início da reserva.");
-        }
-        if (acao == AcaoReserva.MARCAR_NAO_COMPARECEU && agora.isBefore(inicio)) {
-            throw new TransicaoInvalidaException("Só é possível marcar não compareceu a partir do horário de início.");
+        if (ACOES_A_PARTIR_DO_INICIO.contains(acao) && agora.isBefore(inicio)) {
+            throw new TransicaoInvalidaException("Só é possível " + acao.name().toLowerCase().replace('_', ' ')
+                    + " a partir do horário de início da reserva.");
         }
         this.estado = destino;
     }
+
+    /** D-07: iniciar o uso e marcar não compareceu só a partir do horário de início. */
+    private static final Set<AcaoReserva> ACOES_A_PARTIR_DO_INICIO = Set.of(AcaoReserva.INICIAR,
+            AcaoReserva.MARCAR_NAO_COMPARECEU);
 
     /** Transições permitidas: origem → (ação → destino). */
     private static final Map<EstadoReserva, Map<AcaoReserva, EstadoReserva>> TRANSICOES = Map.of(
