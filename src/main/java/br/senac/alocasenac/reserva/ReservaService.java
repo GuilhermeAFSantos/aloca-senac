@@ -30,6 +30,9 @@ public class ReservaService {
 
     static final String ENTIDADE = "Reserva";
 
+    /** Ator das mudanças feitas pelo próprio sistema, como a aprovação automática (D-05). */
+    static final String ATOR_SISTEMA = "sistema";
+
     private final ReservaRepository reservas;
     private final OcupacaoRepository ocupacoes;
     private final VerificadorDisponibilidade verificador;
@@ -99,7 +102,9 @@ public class ReservaService {
         auditoria.registrar(ENTIDADE, reserva.getId(), "CRIACAO", null, reserva.descricao(), solicitante);
         if (recursos.findAllById(recursoIds).stream().noneMatch(Recurso::isRestrito)) {
             // D-05: só recursos não restritos, o sistema aprova na hora (RF7 exige aprovação só para restritos)
+            String anterior = reserva.descricao();
             reserva.aplicar(AcaoReserva.APROVAR, clock.instant());
+            auditoria.registrar(ENTIDADE, reserva.getId(), "APROVAR", anterior, reserva.descricao(), ATOR_SISTEMA);
         }
         outbox.save(new NotificacaoOutbox("RESERVA_CRIADA", solicitante,
                 "{\"reservaId\":" + reserva.getId() + "}", EstadoNotificacao.PENDENTE));
