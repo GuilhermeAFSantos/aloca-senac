@@ -72,8 +72,14 @@ public class Reserva {
 
     /** Transições permitidas: origem → (ação → destino). */
     private static final Map<EstadoReserva, Map<AcaoReserva, EstadoReserva>> TRANSICOES = Map.of(
-            EstadoReserva.SOLICITADA, Map.of(AcaoReserva.APROVAR, EstadoReserva.APROVADA),
-            EstadoReserva.APROVADA, Map.of(AcaoReserva.INICIAR, EstadoReserva.EM_USO),
+            EstadoReserva.SOLICITADA, Map.of(
+                    AcaoReserva.APROVAR, EstadoReserva.APROVADA,
+                    AcaoReserva.REJEITAR, EstadoReserva.REJEITADA,
+                    AcaoReserva.CANCELAR, EstadoReserva.CANCELADA),
+            EstadoReserva.APROVADA, Map.of(
+                    AcaoReserva.INICIAR, EstadoReserva.EM_USO,
+                    AcaoReserva.CANCELAR, EstadoReserva.CANCELADA,
+                    AcaoReserva.MARCAR_NAO_COMPARECEU, EstadoReserva.NAO_COMPARECEU),
             EstadoReserva.EM_USO, Map.of(AcaoReserva.CONCLUIR, EstadoReserva.CONCLUIDA));
 
     /** Move a reserva para outro intervalo (RF4); a disponibilidade é verificada pelo serviço. */
