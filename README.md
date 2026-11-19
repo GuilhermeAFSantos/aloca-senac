@@ -27,6 +27,18 @@ O segredo de assinatura vem da variável de ambiente `ALOCASENAC_JWT_SEGREDO`, c
 ./mvnw test
 ```
 
+## Integração contínua
+O workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) roda `./mvnw -B verify` em todo pull request e em todo push na `main`. Os relatórios do Surefire e do Failsafe ficam como artifact por 7 dias. A `main` é protegida: o merge exige o check **`verify`** verde e atualizado com a base, e force-push e exclusão da branch estão bloqueados.
+
+### Evidência da prática (Aula 06, PR #1)
+| Run | Commit | Resultado | O que mostra |
+|---|---|---|---|
+| [44614700125](https://github.com/GuilhermeAFSantos/aloca-senac/actions/runs/44614700125) | `68015df` | ✅ verde | Primeiro run do workflow no PR |
+| [44614975542](https://github.com/GuilhermeAFSantos/aloca-senac/actions/runs/44614975542) | — | ✅ verde | Actions atualizadas para v5 |
+| [44615229324](https://github.com/GuilhermeAFSantos/aloca-senac/actions/runs/44615229324) | — | ✅ verde | `upload-artifact@v6`, sem avisos de Node 20 |
+| [44615426256](https://github.com/GuilhermeAFSantos/aloca-senac/actions/runs/44615426256) | `1e81ffc` | ❌ **vermelho** | Quebra proposital da asserção de `RN_T1_C01`. O CI falha em `IntervaloTest.java:29` |
+| [44615652155](https://github.com/GuilhermeAFSantos/aloca-senac/actions/runs/44615652155) | `ca89893` | ✅ verde | Revert da quebra; o teste ficou idêntico ao original |
+
 ## Documentação
 - [PRD](docs/prd.md)
 - [Arquitetura](docs/arquitetura.md)
