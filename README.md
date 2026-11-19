@@ -44,4 +44,5 @@ O workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) roda `./mvnw -
 - [Arquitetura](docs/arquitetura.md)
 - [Plano de Teste](docs/plano-de-teste.md)
 - [Requisitos](docs/requisitos.md)
+- [RTM: requisito → risco → teste → evidência](docs/rtm.md)
 - [Gestão de Defeitos](docs/defeitos.md) — relate falhas pelo template de issue "Relato de defeito"
