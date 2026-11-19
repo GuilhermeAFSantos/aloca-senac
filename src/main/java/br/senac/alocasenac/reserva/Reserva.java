@@ -65,9 +65,11 @@ public class Reserva {
     /** Aplica uma ação de mudança de estado (RN-E1, RN-E2), no instante {@code agora}. */
     public void aplicar(AcaoReserva acao, Instant agora) {
         EstadoReserva destino = TRANSICOES.getOrDefault(estado, Map.of()).get(acao);
-        if (destino != null) {
-            this.estado = destino;
+        if (destino == null) {
+            throw new TransicaoInvalidaException(
+                    "Não é possível " + acao.name().toLowerCase().replace('_', ' ') + " uma reserva " + estado + ".");
         }
+        this.estado = destino;
     }
 
     /** Transições permitidas: origem → (ação → destino). */
