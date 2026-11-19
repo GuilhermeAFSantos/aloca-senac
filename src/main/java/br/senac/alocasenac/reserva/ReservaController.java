@@ -53,6 +53,11 @@ public class ReservaController {
         return ResponseEntity.ok(ReservaResponse.de(alterada));
     }
 
+    @PostMapping("/{id}/aprovacao")
+    public ResponseEntity<ReservaResponse> aprovar(@PathVariable Long id, Authentication usuario) {
+        return ResponseEntity.ok().build();
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> apagar(@PathVariable Long id, Authentication usuario) {
