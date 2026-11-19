@@ -26,7 +26,7 @@ class IntervaloTest {
 
         // Assert
         assertThat(intervalo.inicio()).isEqualTo(inicio);
-        assertThat(intervalo.fim()).isEqualTo(inicio); // QUEBRA PROPOSITAL (Aula 06 P2): sera revertida
+        assertThat(intervalo.fim()).isEqualTo(fim);
     }
 
     @Test
