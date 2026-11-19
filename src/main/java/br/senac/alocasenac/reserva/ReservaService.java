@@ -84,11 +84,16 @@ public class ReservaService {
     public Reserva aprovar(Long reservaId, String ator) {
         return transacao.execute(status -> {
             Reserva reserva = buscar(reservaId);
-            String anterior = reserva.descricao();
-            reserva.aplicar(AcaoReserva.APROVAR, clock.instant());
-            auditoria.registrar(ENTIDADE, reservaId, AcaoReserva.APROVAR.name(), anterior, reserva.descricao(), ator);
+            aplicarEAuditar(reserva, AcaoReserva.APROVAR, ator);
             return reservas.save(reserva);
         });
+    }
+
+    /** Aplica a ação no instante do relógio injetado e audita na mesma transação (RN-E5, ADR-004). */
+    private void aplicarEAuditar(Reserva reserva, AcaoReserva acao, String ator) {
+        String anterior = reserva.descricao();
+        reserva.aplicar(acao, clock.instant());
+        auditoria.registrar(ENTIDADE, reserva.getId(), acao.name(), anterior, reserva.descricao(), ator);
     }
 
     public void apagar(Long reservaId, String ator) {
@@ -112,9 +117,7 @@ public class ReservaService {
         auditoria.registrar(ENTIDADE, reserva.getId(), "CRIACAO", null, reserva.descricao(), solicitante);
         if (recursos.findAllById(recursoIds).stream().noneMatch(Recurso::isRestrito)) {
             // D-05: só recursos não restritos, o sistema aprova na hora (RF7 exige aprovação só para restritos)
-            String anterior = reserva.descricao();
-            reserva.aplicar(AcaoReserva.APROVAR, clock.instant());
-            auditoria.registrar(ENTIDADE, reserva.getId(), "APROVAR", anterior, reserva.descricao(), ATOR_SISTEMA);
+            aplicarEAuditar(reserva, AcaoReserva.APROVAR, ATOR_SISTEMA);
         }
         outbox.save(new NotificacaoOutbox("RESERVA_CRIADA", solicitante,
                 "{\"reservaId\":" + reserva.getId() + "}", EstadoNotificacao.PENDENTE));
