@@ -361,3 +361,73 @@ O Prompt 2 diz que um teste que já passa indica caso mal escrito ou regra já i
 | G-04 | RF3: a pesquisa por disponibilidade considera **todas** as ocupações ativas, inclusive bloqueios futuros | Um recurso bloqueado não aparece como disponível, mas isso não impede a reserva, que é B3 | Registrado |
 | G-05 | Autenticação da API decidida pelo usuário: **JWT HS256**, segredo em `ALOCASENAC_JWT_SEGREDO` (nunca versionado). Sem segredo, a aplicação sobe com chave aleatória e não aceita token externo | ADR-014 revisada | Decidido |
 | G-06 | Propagação `MANDATORY` na auditoria impedia a injeção de falha do teste RN-E5-C04 | Voltou para `REQUIRED`; os serviços sempre chamam dentro da própria transação (I-5 mantida) | Corrigido na produção, teste intacto |
+
+## 7. Cobertura com JaCoCo (Aula 07, Prompt 1)
+
+### 7.1 Configuração e gate
+- `jacoco-maven-plugin` 0.8.13 no `pom.xml`: agente em todos os testes, relatórios **HTML e XML** em `target/site/jacoco/` e gate na fase `verify` sobre o projeto inteiro: **linhas ≥ 80% (MT-1)** e **branches ≥ 70% (MT-2)**.
+- No CI, o relatório sobe como artifact `relatorio-jacoco` (`if: always()`, 7 dias).
+
+| Medição (`./mvnw -B clean verify`) | Linhas | Branches | Testes |
+|---|---|---|---|
+| Antes das lacunas | 92,3% (371/402) | 84,8% (78/92) | 72 |
+| **Depois das lacunas de risco** | **95,1% (385/405)** | **92,4% (85/92)** | **93** |
+
+**Prova do gate:**
+| Situação | Comando | Resultado |
+|---|---|---|
+| Cobertura derrubada (só `IntervaloTest`) | `./mvnw -B clean verify -Dtest=IntervaloTest -Dsurefire.failIfNoSpecifiedTests=false` | **BUILD FAILURE**: "lines covered ratio is 0.01, but expected minimum is 0.80" e "branches covered ratio is 0.06, but expected minimum is 0.70" |
+| Cobertura restaurada | `./mvnw -B clean verify` | **BUILD SUCCESS**, 93 testes |
+
+> **Achado:** sem `clean`, a primeira tentativa de derrubar a cobertura **passou**. O JaCoCo acumula os dados em `target/jacoco.exec` entre execuções locais, e a cobertura antiga inflou a nova medição. No CI isso não acontece, porque cada run começa de um checkout limpo. **Para medir localmente, use `./mvnw -B clean verify`.**
+
+### 7.2 Lacunas encontradas e classificação
+| ID | Classe:linha | O que não estava coberto | Classificação | Tratamento |
+|---|---|---|---|---|
+| G1 | `Emprestimo.java:51-52` | Devolver item já devolvido | **Risco** (estado proibido, RF9) | Teste RF9-C08 |
+| G2 | `RelatorioService.java:47-48` | Ocupação inteiramente fora do período | **Risco**: sem o desvio, a utilização sairia negativa (RF12) | Teste RF12-C07 (trinca) |
+| G3 | `SegurancaConfig.java:72-73` | Segredo JWT válido; caminho token → perfil | **Risco** (LIM-3; R1-01 do ATAM ciclo 01) | Testes RF1-C09 (trinca 31/32/33) e RF1-C10–C13 (token real pela API) |
+| G4 | `CatalogoService.java:35` | Recurso sem capacidade no filtro de capacidade | **Risco** (resultado errado, RF3) | Teste RF3-C06 |
+| G5 | `PoliticaAcessoReserva.java:12,15` | Solicitante dono e Administrador alterando | **Risco** (D-03, LIM-3) | Teste RF1-C07/C08 |
+| G6 | `ReservaService.java:68-69` | Duas alterações simultâneas para o mesmo horário | **Risco** (dupla reserva por alteração, LIM-4) | Teste RN-T3-C06 |
+| G7 | `TratamentoDeErros.java:31,36-37,47` | 400 por corpo ilegível, 409 por conflito, 404 pela API | **Risco** (RF13, RQ-6) | Testes RF13-C01–C03 |
+| — | `RelatorioService.java:31-32` | Ocupação inativa ou de bloqueio no relatório | **Risco bloqueado**: o esperado depende de **Q-14** | Sem teste até a resposta |
+| — | `RelatorioService.java:50-51` | Reserva que cruza o limite do período | **Risco bloqueado**: o esperado depende de **Q-13** | Sem teste até a resposta |
+| — | `VerificadorDisponibilidade.java:27`, `Ocupacao.java:64` | Ocupação de origem BLOQUEIO | **Risco reservado** para o ciclo BDD (B3) | Sem teste agora (prioridade do BDD) |
+| — | `ReservaService.java:75-76`, `ReservaController.java:59-60` | Linha que chama método que sempre lança exceção | **Cosmética**: artefato do JaCoCo; o comportamento é coberto por RN-E4-C04 | Nenhum |
+| — | `SegurancaConfig.java:72` (1 branch) | Segredo `null` | **Cosmética**: o `@Value` usa `""` como padrão, então `null` nunca chega | Nenhum |
+| — | `AgendadorNotificacoes.java:23-24` | Disparo agendado (desligado nos testes) | **Cosmética**: delegação de uma linha; o despacho é coberto por RF11-C01–C03 | Nenhum |
+| — | Getters de `Emprestimo`, `Ocupacao`, `TentativaRecusada`, `RegistroAuditoria`, `ConflitoDeHorarioException`; `AlocaSenacApplication.main` | Acessores não lidos pelos testes; ponto de entrada | **Cosmética** | Nenhum |
+
+### 7.3 Testes acrescentados (matriz regra → caso → teste → status)
+| Regra | Caso | Teste (classe :: método) | Status |
+|---|---|---|---|
+| RF9 | C08 | `emprestimo/EmprestimoDevolucaoRepetidaTest :: RF9_C08_segundaDevolucaoERecusada` | **verde** |
+| RF12 | C07 (×4: −1 s, encostada no início, encostada no fim, +1 s) | `relatorio/RelatorioPeriodoTest :: RF12_C07_reservaForaDoPeriodoNaoContaNaUtilizacao` | **verde** |
+| RF1 | C07, C08 (×3: dono, Responsável, Administrador) | `reserva/PoliticaAcessoReservaTest :: RF1_C07eC08_donoResponsavelEAdministradorPodemAlterar` | **verde** |
+| RF1 | C05 (unidade) | `reserva/PoliticaAcessoReservaTest :: RF1_C05_solicitanteQueNaoEDonoNaoPodeAlterar` | **verde** |
+| RF1 | C09 (×3: 31, 32, 33 caracteres) | `config/SegredoJwtTest :: RF1_C09_segredoPrecisaDeNoMinimo32Caracteres` | **verde** |
+| RF1 | C10 | `config/AutenticacaoJwtApiTest :: RF1_C10_tokenDeAdministradorCadastraSala` | **verde** |
+| RF1 | C11 | `… :: RF1_C11_tokenDeSolicitanteNaoCadastraSala` | **verde** |
+| RF1 | C12 | `… :: RF1_C12_tokenSemPerfilNaoCadastraSala` | **verde** |
+| RF1 | C13 | `… :: RF1_C13_tokenComAssinaturaInvalidaERecusado` | **verde** |
+| RF3 | C06 | `recurso/PesquisaCapacidadeTest :: RF3_C06_recursoSemCapacidadeEExcluidoDaPesquisaPorCapacidade` | **verde** |
+| RN-T3 | C06 | `reserva/ReservaAlteracaoConcorrenteTest :: RN_T3_C06_alteracoesSimultaneasParaOMesmoHorarioAceitamUmaSo` | **verde** |
+| RF13 | C01 | `reserva/ReservaApiErrosTest :: RF13_C01_horarioOcupadoDevolve409ComMensagemCompreensivel` | **verde** |
+| RF13 | C02 | `… :: RF13_C02_corpoIlegivelDevolve400SemDetalhesInternos` | **verde** |
+| RF13 | C03 | `… :: RF13_C03_reservaInexistenteDevolve404` | **verde** |
+
+Os tokens dos testes são **sintéticos**: gerados por `TokensDeTeste` com segredos de teste feitos por repetição de caracteres, como `"t".repeat(48)`. Nenhum segredo real foi usado.
+
+### 7.4 Os testes novos pegam a falha? (mutação manual)
+Para não subir o número com teste que passa por acaso, a produção foi quebrada temporariamente e depois restaurada (`git diff` vazio):
+
+| Mutação | Teste | Resultado |
+|---|---|---|
+| Removido o desvio "fora do período" em `RelatorioService.duracaoDentro` | RF12-C07 | **Pegou**: os casos −1 s e +1 s ficaram vermelhos (utilização negativa) |
+| Mínimo do segredo trocado de 32 para 31 em `SegurancaConfig` | RF1-C09 | **Sobreviveu**: a biblioteca Nimbus também recusa chave HS256 com menos de 256 bits, então o segredo de 31 caracteres continua recusado. O comportamento (segredo curto nunca aceito) é garantido em duas camadas, e a checagem própria só adiciona o aviso no log. O teste foi mantido, porque prova o comportamento, não a implementação |
+
+### 7.5 O que continua sem teste
+- **Q-13 e Q-14** (relatório): os casos +1 da trinca de RF12-C07 no limite que **cruza** o período e o tratamento de ocupações inativas e de bloqueio.
+- **B1–B4**: ciclo BDD.
+- Comportamento de produção **não foi alterado** nesta etapa.
