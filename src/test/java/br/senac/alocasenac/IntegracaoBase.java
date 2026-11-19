@@ -20,8 +20,12 @@ import br.senac.alocasenac.reserva.TentativaRecusadaRepository;
  */
 @SpringBootTest(properties = "alocasenac.notificacao.agendamento=false")
 @AutoConfigureMockMvc
-@Import(TestcontainersConfiguration.class)
+@Import({ TestcontainersConfiguration.class, RelogioDeTeste.Configuracao.class })
 public abstract class IntegracaoBase {
+
+    /** "Agora" de todos os serviços nos testes; volta ao padrão antes de cada teste (D-12). */
+    @Autowired
+    protected RelogioDeTeste relogio;
 
     @Autowired
     protected RecursoRepository recursos;
@@ -43,6 +47,7 @@ public abstract class IntegracaoBase {
 
     @BeforeEach
     void limparBanco() {
+        relogio.voltarAoPadrao();
         outbox.deleteAll();
         auditoria.deleteAll();
         tentativasRecusadas.deleteAll();

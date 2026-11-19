@@ -1,5 +1,6 @@
 package br.senac.alocasenac.reserva;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -14,6 +15,8 @@ import br.senac.alocasenac.auditoria.AuditoriaService;
 import br.senac.alocasenac.notificacao.EstadoNotificacao;
 import br.senac.alocasenac.notificacao.NotificacaoOutbox;
 import br.senac.alocasenac.notificacao.NotificacaoOutboxRepository;
+import br.senac.alocasenac.recurso.Recurso;
+import br.senac.alocasenac.recurso.RecursoRepository;
 
 /**
  * Criação, alteração e exclusão de reservas (RF4, RF5, RF6, RN-E4, RN-E5).
@@ -27,6 +30,9 @@ public class ReservaService {
 
     static final String ENTIDADE = "Reserva";
 
+    /** Ator das mudanças feitas pelo próprio sistema, como a aprovação automática (D-05). */
+    static final String ATOR_SISTEMA = "sistema";
+
     private final ReservaRepository reservas;
     private final OcupacaoRepository ocupacoes;
     private final VerificadorDisponibilidade verificador;
@@ -34,10 +40,13 @@ public class ReservaService {
     private final RegistroDeRecusas recusas;
     private final NotificacaoOutboxRepository outbox;
     private final TransactionTemplate transacao;
+    private final RecursoRepository recursos;
+    private final Clock clock;
 
     public ReservaService(ReservaRepository reservas, OcupacaoRepository ocupacoes,
             VerificadorDisponibilidade verificador, AuditoriaService auditoria, RegistroDeRecusas recusas,
-            NotificacaoOutboxRepository outbox, PlatformTransactionManager transacoes) {
+            NotificacaoOutboxRepository outbox, PlatformTransactionManager transacoes, RecursoRepository recursos,
+            Clock clock) {
         this.reservas = reservas;
         this.ocupacoes = ocupacoes;
         this.verificador = verificador;
@@ -45,6 +54,8 @@ public class ReservaService {
         this.recusas = recusas;
         this.outbox = outbox;
         this.transacao = new TransactionTemplate(transacoes);
+        this.recursos = recursos;
+        this.clock = clock;
     }
 
     public Reserva criar(String solicitante, Set<Long> recursoIds, Instant inicio, Instant fim) {
@@ -70,6 +81,21 @@ public class ReservaService {
         }
     }
 
+    public Reserva aprovar(Long reservaId, String ator) {
+        return transacao.execute(status -> {
+            Reserva reserva = buscar(reservaId);
+            aplicarEAuditar(reserva, AcaoReserva.APROVAR, ator);
+            return reservas.save(reserva);
+        });
+    }
+
+    /** Aplica a ação no instante do relógio injetado e audita na mesma transação (RN-E5, ADR-004). */
+    private void aplicarEAuditar(Reserva reserva, AcaoReserva acao, String ator) {
+        String anterior = reserva.descricao();
+        reserva.aplicar(acao, clock.instant());
+        auditoria.registrar(ENTIDADE, reserva.getId(), acao.name(), anterior, reserva.descricao(), ator);
+    }
+
     public void apagar(Long reservaId, String ator) {
         Reserva reserva = buscar(reservaId);
         reserva.verificarPodeSerApagada();
@@ -89,6 +115,10 @@ public class ReservaService {
         }
         ocupacoes.flush();
         auditoria.registrar(ENTIDADE, reserva.getId(), "CRIACAO", null, reserva.descricao(), solicitante);
+        if (recursos.findAllById(recursoIds).stream().noneMatch(Recurso::isRestrito)) {
+            // D-05: só recursos não restritos, o sistema aprova na hora (RF7 exige aprovação só para restritos)
+            aplicarEAuditar(reserva, AcaoReserva.APROVAR, ATOR_SISTEMA);
+        }
         outbox.save(new NotificacaoOutbox("RESERVA_CRIADA", solicitante,
                 "{\"reservaId\":" + reserva.getId() + "}", EstadoNotificacao.PENDENTE));
         return reserva;

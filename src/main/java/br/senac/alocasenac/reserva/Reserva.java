@@ -2,6 +2,7 @@ package br.senac.alocasenac.reserva;
 
 import java.time.Instant;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import jakarta.persistence.ElementCollection;
@@ -60,6 +61,36 @@ public class Reserva {
                 ? "Reservas iniciadas não podem ser apagadas."
                 : "Reservas não são apagadas; para desistir, cancele a reserva.");
     }
+
+    /** Aplica uma ação de mudança de estado (RN-E1, RN-E2), no instante {@code agora}. */
+    public void aplicar(AcaoReserva acao, Instant agora) {
+        EstadoReserva destino = TRANSICOES.getOrDefault(estado, Map.of()).get(acao);
+        if (destino == null) {
+            throw new TransicaoInvalidaException(
+                    "Não é possível " + acao.name().toLowerCase().replace('_', ' ') + " uma reserva " + estado + ".");
+        }
+        if (ACOES_A_PARTIR_DO_INICIO.contains(acao) && agora.isBefore(inicio)) {
+            throw new TransicaoInvalidaException("Só é possível " + acao.name().toLowerCase().replace('_', ' ')
+                    + " a partir do horário de início da reserva.");
+        }
+        this.estado = destino;
+    }
+
+    /** D-07: iniciar o uso e marcar não compareceu só a partir do horário de início. */
+    private static final Set<AcaoReserva> ACOES_A_PARTIR_DO_INICIO = Set.of(AcaoReserva.INICIAR,
+            AcaoReserva.MARCAR_NAO_COMPARECEU);
+
+    /** Transições permitidas: origem → (ação → destino). */
+    private static final Map<EstadoReserva, Map<AcaoReserva, EstadoReserva>> TRANSICOES = Map.of(
+            EstadoReserva.SOLICITADA, Map.of(
+                    AcaoReserva.APROVAR, EstadoReserva.APROVADA,
+                    AcaoReserva.REJEITAR, EstadoReserva.REJEITADA,
+                    AcaoReserva.CANCELAR, EstadoReserva.CANCELADA),
+            EstadoReserva.APROVADA, Map.of(
+                    AcaoReserva.INICIAR, EstadoReserva.EM_USO,
+                    AcaoReserva.CANCELAR, EstadoReserva.CANCELADA,
+                    AcaoReserva.MARCAR_NAO_COMPARECEU, EstadoReserva.NAO_COMPARECEU),
+            EstadoReserva.EM_USO, Map.of(AcaoReserva.CONCLUIR, EstadoReserva.CONCLUIDA));
 
     /** Move a reserva para outro intervalo (RF4); a disponibilidade é verificada pelo serviço. */
     public void reagendar(Intervalo novo) {

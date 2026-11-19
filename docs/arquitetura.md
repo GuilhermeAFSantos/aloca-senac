@@ -1246,7 +1246,7 @@ Tecnologia: Actuator e Micrometer do Spring Boot são a opção natural do DA-01
 | S-06 | Instância única | P-02 |
 | S-07 | Mesmo fuso horário | P-05 |
 | S-08 | Definição de "conflito evitado" | Professor |
-| S-09 | Não restrito → APROVADA direto | P-18 |
+| S-09 | Não restrito → APROVADA direto | P-18 — **confirmada pela equipe em 2026-11-19 (D-05 em `docs/testes/bdd-aprovacao-bloqueio.md`)**: nasce SOLICITADA e o sistema aprova na hora |
 | S-10 | SOLICITADA já ocupa o horário | P-19 — **confirmada pela equipe em 2026-11-19 (D-02 em `docs/testes/plano-tdd.md`)** |
 | S-11 | Margem de corte > tempo máximo de transação | P-20 |
 

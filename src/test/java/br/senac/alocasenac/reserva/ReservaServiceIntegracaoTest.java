@@ -187,8 +187,8 @@ class ReservaServiceIntegracaoTest extends IntegracaoBase {
     @Test
     @DisplayName("RN-E5-C01: criar reserva gera um registro de auditoria com estado, ator e instante")
     void RN_E5_C01_criarReservaGeraAuditoria() {
-        // Arrange
-        Long salaId = sala("S-109").getId();
+        // Arrange: recurso restrito, que fica SOLICITADA (D-05: não restrito é aprovado pelo sistema, ver B1-09)
+        Long salaId = recursos.save(new Recurso("L-109", TipoRecurso.SALA, 30, "Bloco A", true)).getId();
 
         // Act
         Reserva criada = reservaService.criar(MARIANA, Set.of(salaId), h("09:00"), h("10:00"));
