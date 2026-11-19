@@ -81,4 +81,21 @@ class ReservaTransicoesTest {
         assertThatThrownBy(() -> reserva.aplicar(acao, INICIO)).isInstanceOf(TransicaoInvalidaException.class);
         assertThat(reserva.getEstado()).isEqualTo(origem);
     }
+
+    @ParameterizedTest(name = "B4-09: iniciar às {0} numa reserva das 09:00 → {1}")
+    @CsvSource({ "08:59:59, recusado", "09:00, aceito", "09:00:01, aceito" })
+    void B4_09_usoSoComecaAPartirDoHorarioDeInicio(String agora, String resultado) {
+        // Arrange
+        Reserva reserva = reservaNoEstado(EstadoReserva.APROVADA);
+
+        // Act + Assert
+        if (resultado.equals("aceito")) {
+            reserva.aplicar(AcaoReserva.INICIAR, h(agora));
+            assertThat(reserva.getEstado()).isEqualTo(EstadoReserva.EM_USO);
+        } else {
+            assertThatThrownBy(() -> reserva.aplicar(AcaoReserva.INICIAR, h(agora)))
+                    .isInstanceOf(TransicaoInvalidaException.class);
+            assertThat(reserva.getEstado()).isEqualTo(EstadoReserva.APROVADA);
+        }
+    }
 }
