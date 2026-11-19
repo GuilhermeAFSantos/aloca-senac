@@ -4,6 +4,7 @@
 > **Data:** 2026-11-19. **Código avaliado:** branch `pratica/ci-github-actions`, commit `36a5fa5` (PR #1).
 > **Convenção:** **[F]** fato com origem em artefato · **[H]** hipótese, com validação pendente · **[S]** suposição. Nenhuma [H] ou [S] é tratada como fato.
 > **Restrições desta avaliação:** nenhum código alterado, nenhum requisito inventado.
+> **Atualização (Aula 07):** a §10 acrescenta as medidas do JaCoCo e do SonarCloud como evidência, revisa riscos, não-riscos e sensibilidades e marca as ações atendidas. As §1–§9 ficam como foram escritas no ciclo 01.
 
 ## 0. Fontes consultadas
 
@@ -279,3 +280,82 @@
 | **9** | Atualizar `docs/arquitetura.md` com as divergências aceitas (DV1-08, DV1-11, DV1-13) | §8 | Junto com a ação 3 |
 
 **Perguntas a levar ao professor neste ciclo:** P-03 (meta de carga), P-18 (não restrito nasce aprovado?), Q-13 e Q-14 (regras do relatório), P-01 (alvo do modelo do cron).
+
+---
+
+## 10. Atualização com as medidas da Aula 07 (JaCoCo e SonarCloud)
+
+> **Fontes:** relatório do JaCoCo do `./mvnw -B clean verify` (artifact `relatorio-jacoco` do CI); análise do SonarCloud pelo CI no PR #3 (run `44622229915`, plugin Maven, cobertura importada do XML do JaCoCo); detalhes em `docs/testes/plano-tdd.md` §7.
+
+### 10.1 Medidas do projeto
+| Medida | Valor | Fonte | Meta |
+|---|---|---|---|
+| Cobertura de linhas | **95,1%** (385/405) | JaCoCo; o SonarCloud importou o mesmo valor | MT-1 ≥ 80% ✅ |
+| Cobertura de branches | **92,4%** (85/92) | JaCoCo; idem no SonarCloud | MT-2 ≥ 70% ✅ |
+| Cobertura geral (Sonar) | 94,6% | SonarCloud, PR #3 | — |
+| Bugs / vulnerabilidades | **0 / 0** | SonarCloud, PR #3 | MT-4 = 0 críticos ✅ |
+| Code smells / hotspots | 0 / 0 (100% revisados) | SonarCloud, PR #3 | — |
+| Duplicação | 0,0% | SonarCloud, PR #3 | — |
+| Quality Gate do código novo | **PASSED** (confiabilidade, segurança e manutenibilidade com nota A) | SonarCloud, PR #3 | Gate padrão do SonarCloud |
+| Issues tratados até aqui | `java:S2119` **corrigido** (`36a5fa5`); `java:S4502` **aceito com justificativa** (API stateless com JWT, ADR-014) | SonarCloud, PR #1 | — |
+
+**Gates no PR:** o check `verify` agora barra o merge em três casos: teste falhando, cobertura abaixo de 80%/70% (`jacoco:check`) e Quality Gate reprovado (`sonar.qualitygate.wait=true`). O token do SonarCloud vem só do secret do repositório (`SONAR_TOKEN_ALCOA_SENAC`) e aparece mascarado (`***`) no log.
+
+### 10.2 Evidência por cenário
+| Cenário | Classes do artefato | Linhas | Branches | Testes de evidência | Leitura |
+|---|---|---|---|---|---|
+| INT-01 | `ReservaService` · `VerificadorDisponibilidade` · `RegistroDeRecusas` | 96,1% · 100% · 100% | 100% · 75% · 100% | RN-T3-C01–C06, RN-T2-C13 | O branch que falta no Verificador é o de origem BLOQUEIO, que é B3 |
+| INT-02 | `VerificadorDisponibilidade` · `Intervalo` | 100% · 100% | 75% · 100% | RF5-C01–C04, RN-T2-C03–C15 | Fronteiras semiabertas cobertas (D-01) |
+| SEG-01 | `PoliticaAcessoReserva` · `SegurancaConfig` | 100% · 100% | 100% · 75% | RF1-C01–C08 | O branch que falta é o segredo `null`, cosmético |
+| SEG-02 | `SegurancaConfig` + caminho do token | 100% | 75% | **RF1-C09–C13 (novos)**: token real, trinca 31/32/33 | **Agora com evidência** (§10.3, R1-01) |
+| AUD-01 | `AuditoriaService` | 100% | sem branches | RN-E5-C01–C05, RF10-C01 | — |
+| SEG-03 | `TratamentoDeErros` | 100% | sem branches | **RF13-C01–C03 (novos)** | 400, 404 e 409 sem detalhes internos |
+| TST-01 | Projeto inteiro | 95,1% | 92,4% | 93 testes | **Medida existe** (antes "não medida") |
+| CI-01 | Workflow `CI` | — | — | Runs `44615426256` (vermelho) e `44622229915` (com Sonar) | O gate agora também cobre cobertura e Quality Gate |
+| INTG-01 | `DespachanteNotificacoes` | 100% | 100% | RF11-C01–C03 | — |
+| REL-01 | `RelatorioService` | 94,7% | 75% | RF12-C01–C07 | Os branches que faltam são Q-13 e Q-14. R1-02 continua: a cobertura alta **não** mostra que a contagem está certa |
+| DES-01, DES-02 | — | — | — | — | **Continua sem medida**. Cobertura não mede desempenho |
+
+### 10.3 Riscos revisados
+| Risco | Antes | Agora | Evidência |
+|---|---|---|---|
+| R1-01 caminho token → perfil sem teste | Confirmado | **Tratado** | `AutenticacaoJwtApiTest` (RF1-C10–C13) passa um token assinado real pelo decodificador e pelo conversor: Administrador 201, Solicitante 403, sem perfil 403, assinatura errada 401; o `sub` vira o ator da auditoria |
+| R1-05 cobertura não medida | Confirmado | **Tratado** | JaCoCo 95,1% / 92,4%, gate no `verify` e build falhando abaixo da meta (`plano-tdd.md` §7.1) |
+| R1-02 contagem de conflitos evitados | Confirmado | **Confirmado, sem mudança** | A cobertura de `ReservaService` é de 96,1%, mas os testes verificam o comportamento atual, que é exatamente o que está em dúvida. Depende da decisão do grupo (ação 4) |
+| R1-03 notificação duplicada | Confirmado | Confirmado, sem mudança | `DespachanteNotificacoes` tem 100% de cobertura, mas nenhum teste simula queda entre envio e gravação |
+| R1-04 sem emissor de token | Confirmado | Confirmado, sem mudança | Os testes geram o token com `TokensDeTeste`; a aplicação continua sem emissor |
+| R1-06 manutenção aceita (B3) | Confirmado e intencional | Sem mudança | Branch de BLOQUEIO não coberto no Verificador (75%) |
+| R1-07, R1-08, R1-09, R1-10 | Dúvida ou confirmado | Sem mudança | A análise estática não aponta nada sobre eles |
+| **R1-11 (novo)** | — | **Dúvida** | O check `verify` passa a depender da disponibilidade do SonarCloud (`qualitygate.wait`). Se o serviço cair, nenhum PR é mesclado |
+| **R1-12 (novo)** | — | **Confirmado, mitigado** | Localmente, o JaCoCo acumula `target/jacoco.exec` entre execuções e infla a cobertura. No CI não ocorre (checkout limpo); localmente, usar `clean verify` |
+| **R1-13 (novo)** | — | **Confirmado, baixo** | Mutação manual no mínimo do segredo **sobreviveu**: a biblioteca Nimbus repete a mesma regra. O comportamento está garantido, mas a checagem própria não é isolada por teste |
+
+### 10.4 Não-riscos acrescentados
+| ID | Não-risco | Evidência |
+|---|---|---|
+| NR1-09 | Cobertura cair sem ninguém ver | `jacoco:check` derruba o build abaixo de 80%/70% |
+| NR1-10 | Issue novo de confiabilidade ou segurança entrar na `main` | Quality Gate do código novo no check `verify` (`sonar.qualitygate.wait=true`) |
+| NR1-11 | Token do SonarCloud vazar no repositório ou no log | Só o secret do repositório; mascarado no log; nenhuma ocorrência em arquivo versionado |
+| NR1-12 | Teste de lacuna passando por acaso | Mutação no relatório (RF12-C07) derrubou os casos −1 s e +1 s |
+
+### 10.5 Pontos de sensibilidade revisados
+| ID | Ponto | Revisão |
+|---|---|---|
+| SP1-01 | Cláusula da restrição de exclusão | Confirmado pela cobertura: o único branch não coberto do Verificador é a origem BLOQUEIO. É o ponto que o BDD B3 vai mexer |
+| SP1-03 | Claim `perfis` e prefixo `ROLE_` | **Agora protegido por teste** (RF1-C10–C13); trocar o nome da claim derruba a suíte |
+| **SP1-06 (novo)** | Disponibilidade do merge | Depende de dois serviços externos no mesmo check: GitHub Actions e SonarCloud (R1-11) |
+| **SP1-07 (novo)** | Confiabilidade da medida local de cobertura | Depende de limpar o `target/` antes de medir (R1-12) |
+
+### 10.6 Ações priorizadas: situação
+| Ação (§9) | Situação | Evidência |
+|---|---|---|
+| 1. Teste de API com token JWT real | ✅ **Atendida** | `AutenticacaoJwtApiTest`, `SegredoJwtTest` (PR #2) |
+| 2. JaCoCo com gate e SonarCloud pelo CI | ✅ **Atendida** | PR #2 (JaCoCo) e PR #3 (SonarCloud, Quality Gate PASSED) |
+| 3. Ciclo BDD de B1–B4 | ⏳ Pendente | Próxima prática |
+| 4. Definir "conflito evitado" | ⏳ Pendente | Depende do grupo (R1-02) |
+| 5. Tokens para demonstração | ⏳ Pendente | R1-04 |
+| 6. Observabilidade mínima | ⏳ Pendente | R1-09 |
+| 7. Despacho idempotente | ⏳ Pendente | R1-03; aguarda P-10 |
+| 8. JMeter (DES-01, DES-02) | ⏳ Pendente | Semana 42 |
+| 9. Atualizar `docs/arquitetura.md` com divergências aceitas | ⏳ Pendente | Junto com a ação 3 |
+| **10 (nova)** | Decidir se o Quality Gate fica no `verify` ou num check separado e obrigatório, para o CI não travar quando o SonarCloud estiver fora (R1-11) | — |

@@ -15,6 +15,11 @@
 	<description>AlocaSenac - Organizacao de Recursos</description>
 	<properties>
 		<java.version>21</java.version>
+		<!-- RQ-5: análise estática no SonarCloud, lendo a cobertura do JaCoCo. O token vem do CI, nunca do pom. -->
+		<sonar.organization>guilhermeafsantos</sonar.organization>
+		<sonar.projectKey>GuilhermeAFSantos_aloca-senac</sonar.projectKey>
+		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
+		<sonar.coverage.jacoco.xmlReportPaths>${project.build.directory}/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
 	</properties>
 	<dependencies>
 		<dependency>
