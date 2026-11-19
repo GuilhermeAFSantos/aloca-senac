@@ -22,6 +22,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          # Histórico completo: o SonarCloud usa o blame para separar o código novo
+          fetch-depth: 0
 
       - name: Java 21 (Temurin) com cache Maven
         uses: actions/setup-java@v5
@@ -33,6 +36,14 @@ jobs:
       # O verify inclui o gate do JaCoCo (MT-1: 80% de linhas; MT-2: 70% de branches)
       - name: Build, testes e gate de cobertura
         run: ./mvnw -B verify
+
+      # Análise estática com a cobertura do JaCoCo. O Quality Gate do código novo barra o check (qualitygate.wait).
+      - name: Análise do SonarCloud
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_ALCOA_SENAC }}
+        run: >-
+          ./mvnw -B org.sonarsource.scanner.maven:sonar-maven-plugin:5.1.0.4751:sonar
+          -Dsonar.qualitygate.wait=true
 
       - name: Relatórios do Surefire e do Failsafe
         if: always()
