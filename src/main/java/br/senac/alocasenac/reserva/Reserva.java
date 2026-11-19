@@ -72,6 +72,9 @@ public class Reserva {
         if (acao == AcaoReserva.INICIAR && agora.isBefore(inicio)) {
             throw new TransicaoInvalidaException("O uso só pode começar a partir do horário de início da reserva.");
         }
+        if (acao == AcaoReserva.MARCAR_NAO_COMPARECEU && agora.isBefore(inicio)) {
+            throw new TransicaoInvalidaException("Só é possível marcar não compareceu a partir do horário de início.");
+        }
         this.estado = destino;
     }
 
