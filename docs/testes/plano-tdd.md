@@ -1,6 +1,7 @@
 # AlocaSenac — Plano de TDD
 
-> **Etapa:** Aula 05, Prompt 1 — inventário das regras de negócio (nenhum teste nem código escrito nesta etapa).
+> **Etapa:** Aula 05 — Prompt 1 (inventário das regras) e Prompt 2 (testes na fase red, matriz em §5).
+> **Convenções de API usadas nos testes:** 400 para entrada inválida, 403 para perfil sem permissão, 409 para operação proibida pela regra, 201 para criação. São convenções de interface, não regras de negócio.
 > **Fonte de verdade:** somente os artefatos do repositório. Nenhuma regra foi inventada; o que a fonte não decide está em §4 (ambiguidades e perguntas).
 
 ## 1. Artefatos consultados
@@ -66,6 +67,8 @@ Por decisão do usuário (prioridade dos prompts de BDD), quatro regras **entram
 | RN-T2-C11 | CON | alteração de uma reserva para um horário ocupado por outra | Recusada | U |
 | RN-T2-C12 | FEL | alteração de uma reserva dentro do próprio horário (ex.: 09:00–10:00 para 09:15–10:00) | Aceita, sem conflito consigo mesma | U |
 | RN-T2-C13 | CON | sobreposição gravada diretamente no banco, sem passar pela aplicação | Rejeitada pela restrição de exclusão (ADR-003) | I |
+| RN-T2-C14 | CON | horário ocupado por reserva ainda SOLICITADA (ocupação ativa) | Recusada (**D-02**) | U |
+| RN-T2-C15 | FEL | horário de ocupação inativa (reserva rejeitada ou cancelada) | Aceita (**D-02**) | U |
 
 ### 3.3 RN-T3 / RF6 — Duas solicitações simultâneas produzem uma única reserva aceita
 *Origem:* `docs/requisitos.md` RN-T3, RF6, RQ-3, LIM-4.
@@ -75,7 +78,7 @@ Por decisão do usuário (prioridade dos prompts de BDD), quatro regras **entram
 | RN-T3-C02 | CON | N requisições simultâneas, mesmo recurso e intervalo | Exatamente 1 aceita, N−1 recusadas | I |
 | RN-T3-C03 | CON | 2 simultâneas, intervalos parcialmente sobrepostos | Exatamente 1 aceita | I |
 | RN-T3-C04 | FEL | 2 simultâneas, recursos diferentes | As 2 aceitas | I |
-| RN-T3-C05 | CON | recusa por concorrência | Registrada como tentativa recusada, motivo CONCORRÊNCIA (RF12) | I |
+| RN-T3-C05 | CON | recusa por concorrência | Registrada como tentativa recusada (RF12), com motivo SOBREPOSIÇÃO ou CONCORRÊNCIA conforme o ponto em que a disputa é detectada (checagem prévia ou banco) | I |
 
 ### 3.4 RN-T4 / RF8 — Recursos em manutenção não podem ser reservados ⟶ **reservada B3**
 *Origem:* `docs/requisitos.md` RN-T4, RF8.
@@ -238,21 +241,88 @@ RF13 (interface responsiva) e RF14 (documentação) são requisitos de qualidade
 
 ## 5. Matriz regra → caso → teste → status
 
-> Preenchida na Aula 05, Prompt 2 (fase red). Status possíveis: **sem teste** · **vermelho** (falha pelo motivo esperado) · **verde** (Aula 06) · **reservada BDD** · **aguardando Q-xx**.
+> Preenchida na Aula 05, Prompt 2 (fase red), com `./mvnw -B test` em 2026-11-19: **72 testes, 61 falhas, 0 erros**. Todas as falhas são de **asserção**, sem erro de compilação ou configuração. Os 11 que passam são o `contextLoads` do marco zero e os 10 investigados em §5.1.
+> Status: **vermelho** (falha pelo motivo esperado) · **verde no esqueleto** (investigado, §5.1) · **reservada BDD** · **aguardando Q-xx**.
+> Testes em `src/test/java/br/senac/alocasenac/`. Nome do método = ID do caso.
 
-| Regra | Casos | Teste | Status |
-|---|---|---|---|
-| RN-T1 | C01–C06 (C03 aguarda Q-03) | — | sem teste |
-| RN-T2 / RF5 | C01–C13, RF5-C01–C04 | — | sem teste |
-| RN-T3 / RF6 | C01–C05 | — | sem teste |
-| RN-T4 / RF8 | C01–C07 | — | **reservada BDD (B3)** |
-| RN-E1 / RN-E2 | RN-E1-C01 | — | sem teste |
-| RN-E1 / RN-E2 | demais casos | — | **reservada BDD (B4)** |
-| RN-E3 / RF7 | C01–C06 | — | **reservada BDD (B1, B2)** |
-| RN-E4 | C01–C04 | — | sem teste |
-| RN-E5 / RF10 | C01–C05, RF10-C01 (C06 é B4) | — | sem teste |
-| RF9 | C01–C04 (C05–C07 aguardam Q-10–Q-12) | — | sem teste |
-| RF12 | C01–C04 (C05, C06 aguardam Q-13, Q-14) | — | sem teste |
-| RF1 | C01–C06 | — | sem teste |
-| RF2 / RF3 | RF2-C01, C02, RF3-C01–C04 (RF3-C05 aguarda Q-16) | — | sem teste |
-| RF11 | C01–C03 | — | sem teste |
+| Regra | Caso | Teste (classe :: método) | Falha observada | Status |
+|---|---|---|---|---|
+| RN-T1 | C01 | `reserva/IntervaloTest :: RN_T1_C01_terminoDepoisDoInicioEAceito` | — | verde no esqueleto |
+| RN-T1 | C02 | `reserva/IntervaloTest :: RN_T1_C02_terminoIgualAoInicioERecusado` | esperava `IntervaloInvalidoException` | vermelho |
+| RN-T1 | C03 | — | — | aguardando Q-03 |
+| RN-T1 | C04 | `reserva/IntervaloTest :: RN_T1_C04_terminoAntesDoInicioERecusado` | esperava exceção | vermelho |
+| RN-T1 | C05 (×3) | `reserva/IntervaloTest :: RN_T1_C05_inicioOuTerminoAusenteERecusado` | esperava exceção | vermelho |
+| RN-T1 | C06 | `reserva/ReservaApiTest :: RN_T1_C06_intervaloInvalidoPelaApiERecusado` | esperava 400, veio 200 | vermelho |
+| RN-T2 | C01 | `reserva/VerificadorDisponibilidadeTest :: RN_T2_C01_mesmoRecursoEmOutroHorarioEAceito` | — | verde no esqueleto |
+| RN-T2 | C02 | `… :: RN_T2_C02_outroRecursoNoMesmoHorarioEAceito` | — | verde no esqueleto |
+| RN-T2 | C03–C07, C10 (×6) | `… :: RN_T2_C03aC07eC10_sobreposicaoNoMesmoRecursoERecusada` | esperava o conflito, veio lista vazia | vermelho |
+| RN-T2 | C08, C09 (×2) | `… :: RN_T2_C08eC09_intervalosQueSeEncostamNaoSeSobrepoem` | — | verde no esqueleto |
+| RN-T2 | C11 | `… :: RN_T2_C11_alteracaoParaHorarioDeOutraReservaERecusada` | esperava o conflito | vermelho |
+| RN-T2 | C12 | `… :: RN_T2_C12_alteracaoDentroDoProprioHorarioEAceita` | — | verde no esqueleto |
+| RN-T2 | C13 | `reserva/ReservaServiceIntegracaoTest :: RN_T2_C13_sobreposicaoGravadaDiretoNoBancoERejeitada` | esperava `DataIntegrityViolationException` | vermelho |
+| RN-T2 | C14 | `reserva/VerificadorDisponibilidadeTest :: RN_T2_C14_reservaPendenteJaOcupaOHorario` | esperava o conflito | vermelho |
+| RN-T2 | C15 | `… :: RN_T2_C15_ocupacaoInativaNaoBloqueia` | — | verde no esqueleto |
+| RF5 | C01 | `… :: RF5_C01_professorJaAlocadoEmOutraSalaEConflito` | esperava o conflito do professor | vermelho |
+| RF5 | C02 | `… :: RF5_C02_salaEProfessorLivresSaoAceitos` | — | verde no esqueleto |
+| RF5 | C03 | `… :: RF5_C03_materialOcupadoEConflito` | esperava o conflito do material | vermelho |
+| RF5 | C04 | `reserva/ReservaServiceIntegracaoTest :: RF5_C04_reservaComUmRecursoEmConflitoERecusadaPorInteiro` | esperava `ConflitoDeHorarioException` | vermelho |
+| RN-T3 / RF6 | C01 | `… :: RN_T3_C01_duasSimultaneasGeramUmaUnicaReserva` | esperava 1 aceita, foram 2 | vermelho |
+| RN-T3 / RF6 | C02 | `… :: RN_T3_C02_vinteSimultaneasGeramUmaUnicaReserva` | esperava 1 aceita, foram 20 | vermelho |
+| RN-T3 / RF6 | C03 | `… :: RN_T3_C03_simultaneasParcialmenteSobrepostasGeramUmaReserva` | esperava 1 aceita, foram 2 | vermelho |
+| RN-T3 / RF6 | C04 | `… :: RN_T3_C04_simultaneasDeRecursosDiferentesSaoAceitas` | esperava 2 gravadas, 0 | vermelho |
+| RN-T3 / RF6 | C05 | `… :: RN_T3_C05_perdedoraDaDisputaERegistradaComoTentativaRecusada` | esperava 1 recusa registrada, 0 | vermelho |
+| RN-T4 / RF8 | C01–C07 | — | — | **reservada BDD (B3)** |
+| RN-E1 | C01 | `reserva/ReservaTest :: RN_E1_C01_novaReservaNasceSolicitada` | esperava SOLICITADA, veio null | vermelho |
+| RN-E1 / RN-E2 | demais | — | — | **reservada BDD (B4)** |
+| RN-E3 / RF7 | C01–C06 | — | — | **reservada BDD (B1, B2)** |
+| RN-E4 | C01, C02 (×2) | `reserva/ReservaTest :: RN_E4_C01eC02_reservaIniciadaNaoPodeSerApagada` | esperava `OperacaoProibidaException` | vermelho |
+| RN-E4 | C03 (×2) | `reserva/ReservaTest :: RN_E4_C03_reservaNaoIniciadaTambemNaoEApagada` | esperava exceção | vermelho |
+| RN-E4 | C04 | `reserva/ReservaApiTest :: RN_E4_C04_apagarReservaIniciadaPelaApiERecusado` | esperava 409, veio 200 | vermelho |
+| RN-E5 | C01 | `reserva/ReservaServiceIntegracaoTest :: RN_E5_C01_criarReservaGeraAuditoria` | esperava a reserva criada, veio null | vermelho |
+| RN-E5 | C02 | `… :: RN_E5_C02_alterarReservaGeraAuditoriaComAntesEDepois` | esperava 1 registro, 0 | vermelho |
+| RN-E5 | C03 | `recurso/RecursoIntegracaoTest :: RN_E5_C03_cadastroDeRecursoGeraAuditoria` | esperava o recurso cadastrado | vermelho |
+| RN-E5 | C04 | `reserva/ReservaAuditoriaFalhaTest :: RN_E5_C04_falhaNaAuditoriaDesfazAReserva` | esperava a falha propagada | vermelho |
+| RN-E5 | C05 | `auditoria/RegistroAuditoriaTest :: RN_E5_C05_registroUsaOInstanteDoRelogioInjetado` | esperava 08:15, veio null | vermelho |
+| RN-E5 | C06 | — | — | **reservada BDD (B4)** |
+| RF10 | C01 | `auditoria/HistoricoAuditoriaTest :: RF10_C01_historicoEmOrdemCronologicaSoDaEntidade` | esperava 2 registros em ordem, veio vazio | vermelho |
+| RF9 | C01 | `emprestimo/EmprestimoTest :: RF9_C01_retiradaRegistraInstanteEResponsavel` | esperava 09:00, veio null | vermelho |
+| RF9 | C02 | `… :: RF9_C02_devolucaoRegistraInstanteEResponsavel` | esperava 11:00, veio null | vermelho |
+| RF9 | C03 | `… :: RF9_C03_devolverSemRetiradaERecusado` | esperava `EmprestimoInvalidoException` | vermelho |
+| RF9 | C04 | `… :: RF9_C04_retirarDuasVezesERecusado` | esperava exceção | vermelho |
+| RF9 | C05–C07 | — | — | aguardando Q-10, Q-11, Q-12 |
+| RF12 | C01 | `relatorio/RelatorioServiceTest :: RF12_C01_utilizacaoSomaAsReservasDoRecurso` | esperava 2 h, mapa vazio | vermelho |
+| RF12 | C02 | `… :: RF12_C02_cargaHorariaDoProfessor` | esperava 3 h, mapa vazio | vermelho |
+| RF12 | C03 | `… :: RF12_C03_conflitosEvitadosContaAsRecusas` | esperava 2, veio 0 | vermelho |
+| RF12 | C04 | `… :: RF12_C04_periodoSemReservasZerado` | — | verde no esqueleto |
+| RF12 | C05, C06 | — | — | aguardando Q-13, Q-14 |
+| RF1 | C01 | `reserva/ReservaApiTest :: RF1_C01_anonimoNaoCriaReserva` | — | verde no esqueleto (§5.1) |
+| RF1 | C02 | `… :: RF1_C02_solicitanteCriaReserva` | esperava 201, veio 200 | vermelho |
+| RF1 | C03 | `recurso/RecursoApiTest :: RF1_C03_solicitanteNaoCadastraSala` | esperava 403, veio 200 | vermelho |
+| RF1 | C04 | `recurso/RecursoApiTest :: RF1_C04_administradorCadastraSala` | esperava 201, veio 200 | vermelho |
+| RF1 | C05 | `reserva/ReservaApiTest :: RF1_C05_solicitanteNaoAlteraReservaDeOutro` | esperava 403, veio 200 | vermelho |
+| RF1 | C06 | `… :: RF1_C06_responsavelAlteraReservaDeSolicitante` | esperava início 11:00, continuou 09:00 | vermelho |
+| RF2 | C01 (×3) | `recurso/RecursoIntegracaoTest :: RF2_C01_recursoCadastradoPodeSerConsultado` | esperava recurso, veio null | vermelho |
+| RF2 | C02 (×4) | `recurso/RecursoTest :: RF2_C02_cadastroSemNomeOuSemTipoERecusado` | esperava `DadosInvalidosException` | vermelho |
+| RF3 | C01 | `recurso/RecursoIntegracaoTest :: RF3_C01_pesquisaPorTipoRetornaSoOTipo` | esperava 1 sala, lista vazia | vermelho |
+| RF3 | C02 | `… :: RF3_C02_pesquisaPorCapacidadeMinimaRespeitaOLimite` | esperava 30 e 31, lista vazia | vermelho |
+| RF3 | C03 | `… :: RF3_C03_pesquisaPorLocalizacao` | esperava 1, lista vazia | vermelho |
+| RF3 | C04 | `… :: RF3_C04_pesquisaPorDisponibilidadeExcluiOcupados` | esperava a sala livre, lista vazia | vermelho |
+| RF3 | C05 | — | — | aguardando Q-16 |
+| RF11 | C01 | `notificacao/NotificacaoIntegracaoTest :: RF11_C01_criarReservaRegistraNotificacaoPendente` | esperava 1 na outbox, 0 | vermelho |
+| RF11 | C02 | `… :: RF11_C02_servicoForaDoArNaoDesfazAReserva` | esperava reserva mantida, 0 | vermelho |
+| RF11 | C03 | `… :: RF11_C03_notificacaoPendenteEEnviadaUmaVez` | esperava 1 envio, 0 | vermelho |
+
+### 5.1 Testes que já passam no esqueleto (investigados)
+
+O Prompt 2 diz que um teste que já passa indica caso mal escrito ou regra já implementada. Cada um foi investigado:
+
+| Teste | Por que passa | Conclusão |
+|---|---|---|
+| RN-T1-C01, RN-T2-C01, C02, C08, C09, C12, C15, RF5-C02 | São casos de **aceitação** ("sem conflito"). O esqueleto do `VerificadorDisponibilidade` devolve lista vazia, e `Intervalo.de` devolve o intervalo, o que coincide com o esperado | **Caso bem escrito.** Protege contra o erro oposto, recusar demais (ex.: tratar intervalos encostados como sobrepostos, contra a D-01). Mantido como teste de regressão |
+| RF12-C04 | O esqueleto devolve relatório zerado, que é o resultado esperado para período vazio | **Caso bem escrito**, de limite. Mantido como regressão |
+| RF1-C01 | O Spring Security, sem configuração própria, já exige autenticação em todas as rotas e devolve 401 | **Regra já atendida pela configuração padrão do framework**, não por código nosso. Ao configurar a autenticação na Aula 06, o teste garante que o anônimo continua barrado |
+
+### 5.2 Regras sem teste
+- **Reservadas para o BDD:** RN-T4/RF8 (B3), RN-E1/RN-E2 exceto o estado inicial (B4), RN-E3/RF7 (B1, B2), RN-E5-C06 (B4).
+- **Aguardando resposta:** RN-T1-C03 (Q-03), RF9-C05–C07 (Q-10–Q-12), RF12-C05–C06 (Q-13, Q-14), RF3-C05 (Q-16).
+- **Todas as outras regras do inventário têm ao menos um teste vermelho.**
