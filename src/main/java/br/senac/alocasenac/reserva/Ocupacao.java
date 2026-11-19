@@ -43,6 +43,11 @@ public class Ocupacao {
         this.ativa = ativa;
     }
 
+    /** Bloqueio de manutenção de um recurso (RF8), criado no instante {@code agora}. */
+    public static Ocupacao bloqueio(Long recursoId, Intervalo intervalo, Instant agora) {
+        return new Ocupacao(recursoId, null, intervalo.inicio(), intervalo.fim(), OrigemOcupacao.BLOQUEIO, true);
+    }
+
     public Long getId() {
         return id;
     }
