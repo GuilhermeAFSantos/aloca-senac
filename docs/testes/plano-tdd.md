@@ -234,6 +234,8 @@ RF13 (interface responsiva) e RF14 (documentação) são requisitos de qualidade
 | **D-03** | Q-15 — Solicitante altera ou cancela reserva de outra pessoa? | **Não.** Solicitante age só sobre as próprias; Responsável e Administrador podem agir sobre qualquer uma | Qualquer Solicitante (risco LIM-3); só o dono, sem exceção | RF1-C05, RF1-C06 |
 | **D-04** | Q-09 — reserva não iniciada pode ser apagada? | **Não.** Nenhuma reserva é apagada; desistir é cancelar, preservando o histórico | Apagar se não iniciada; só o Administrador apaga | RN-E4-C03 |
 
+**Decisões do ciclo BDD (D-05 a D-12):** registradas em `docs/testes/bdd-aprovacao-bloqueio.md` §6. Elas respondem Q-04 (D-05), Q-05 (D-08), Q-06 (D-06), Q-07 (D-07) e Q-08 (resolvida pela fonte: só Responsável aprova restrito, RN-E3).
+
 **Lacunas:**
 - **L-T1** — não há código de domínio nem testes de regra no repositório. Todos os testes da Aula 05 vão exigir assinaturas mínimas.
 - **L-T2** — `docs/rtm.md` não existe; a ligação requisito → teste fica na matriz da §5 até a etapa 4.
